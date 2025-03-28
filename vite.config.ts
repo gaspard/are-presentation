@@ -20,4 +20,5 @@ export default defineConfig({
     react({ include: /\.(jsx|js|mdx|md|tsx|ts)$/ }),
     tsconfig_paths(),
   ],
+  base: "/are-presentation/",
 });
