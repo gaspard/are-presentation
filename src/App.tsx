@@ -1,5 +1,4 @@
 import "./App.css";
-import "./shims";
 import { Slide } from "./slide/Slide";
 import { slides } from "./slides";
 
@@ -8,7 +7,7 @@ function App() {
   return (
     <div className="">
       <div className="mb-8 text-predator-300">ARE - proie / predateur</div>
-      <Slide slide={slides[path].slide} />
+      <Slide slide={slides[path].default} />
     </div>
   );
 }
