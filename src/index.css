@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  /* Prey-inspired neutral/grey palette */
+  --color-prey-50: #f9fafb;
+  --color-prey-100: #f3f4f6;
+  --color-prey-200: #e5e7eb;
+  --color-prey-300: #d1d5db;
+  --color-prey-400: #9ca3af;
+  --color-prey-500: #6b7280;
+  --color-prey-600: #4b5563;
+  --color-prey-700: #374151;
+  --color-prey-800: #1f2937;
+  --color-prey-900: #111827;
+
+  /* Predator-inspired orange palette */
+  --color-predator-50: #fff7ed;
+  --color-predator-100: #ffedd5;
+  --color-predator-200: #fed7aa;
+  --color-predator-300: #fdba74;
+  --color-predator-400: #fb923c;
+  --color-predator-500: #f97316;
+  --color-predator-600: #ea580c;
+  --color-predator-700: #c2410c;
+  --color-predator-800: #9a3412;
+  --color-predator-900: #7c2d12;
+
+  /* Research highlight colors */
+  --color-research-50: #ecfeff;
+  --color-research-100: #cffafe;
+  --color-research-200: #a5f3fc;
+  --color-research-300: #67e8f9;
+  --color-research-400: #22d3ee;
+  --color-research-500: #06b6d4;
+  --color-research-600: #0891b2;
+  --color-research-700: #0e7490;
+  --color-research-800: #155e75;
+  --color-research-900: #164e63;
+
+  /* Custom font sizes for research context */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+
+  /* Border radius variations */
+  --border-radius-sm: 0.125rem;
+  --border-radius-md: 0.25rem;
+  --border-radius-lg: 0.5rem;
+}
+
+.katex {
+  font-size: 1em !important;
+}
+.katex-display {
+  overflow: auto hidden;
+}

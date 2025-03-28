@@ -1,0 +1,5 @@
+.slide {
+  p, ul, ol {
+    margin-top: 1em;
+  }
+}
