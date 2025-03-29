@@ -1,8 +1,15 @@
+import hljs from "highlight.js";
+import glsl from "highlight.js/lib/languages/glsl";
+import python from "highlight.js/lib/languages/python";
+import "highlight.js/styles/night-owl.css";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { type Slide } from "../slides";
 import "./css/slide.css";
 import "./css/typography.css";
+
+hljs.registerLanguage("glsl", glsl);
+hljs.registerLanguage("py", python);
 
 export function Slide({ slide }: { slide: Slide }) {
   const navigate = useNavigate();
@@ -21,9 +28,10 @@ export function Slide({ slide }: { slide: Slide }) {
   }
 
   useEffect(() => {
+    hljs.highlightAll();
     // preload next slide
     if (slide.next) {
-      import(slide.next.file);
+      import(/* @vite-ignore */ slide.next.file);
     }
     function press(e: KeyboardEvent) {
       if (e.key === "ArrowLeft") {
@@ -36,6 +44,7 @@ export function Slide({ slide }: { slide: Slide }) {
     document.addEventListener("keydown", press);
     return () => document.removeEventListener("keydown", press);
   }, []);
+
   return (
     <div className="">
       <div className="flex justify-between text-predator-400 m-4">

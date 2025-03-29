@@ -2,4 +2,8 @@
   p, ul, ol {
     margin-top: 1em;
   }
+  code {
+    font-size: 80%;
+    border-radius: 3px;
+  }
 }

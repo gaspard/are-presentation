@@ -30,8 +30,12 @@ export function PixelShader({ vert, frag }: { vert: string; frag: string }) {
 
     camera.position.z = 1;
 
+    let startTime;
     const animate = (time) => {
-      material.uniforms.time.value = time / 1000;
+      if (!startTime) {
+        startTime = time;
+      }
+      material.uniforms.time.value = (startTime - time) / 1000;
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     };
