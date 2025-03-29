@@ -1,0 +1,24 @@
+import { PixelShader } from "./components/PixelShader";
+
+# Pixel 1
+
+<PixelShader
+  vert={`
+void main() {
+    gl_Position = vec4(position, 1.0);
+}
+
+`}
+  frag={`
+uniform vec2 resolution;
+uniform float time;
+
+void main() {
+    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    float r = sin(uv.x * 10.0 * time) * 0.5 + 0.5;
+    float g = sin(uv.y * 10.0 * time) * 0.5 + 0.5;
+    float b = sin((uv.x + uv.y) * 10.0 + time) * 0.5 + 0.5;
+    gl_FragColor = vec4(r, g, b, 1.0);
+}
+`}
+/>
