@@ -31,15 +31,15 @@ a {outline:none !important; text-decoration:none; color: inherit;}
   }
 
   h1 {
-    font-size:320%;
+    font-size:260%;
     line-height:1.35;
-    font-style:normal;
+    font-weight:normal;
     margin:1.5em 0 0.8em;
   }
 
   h2 {
     font-weight:bold;
-    font-size:200%;
+    font-size:140%;
     margin:1em 0 0.8em;
   }
 
@@ -53,7 +53,7 @@ a {outline:none !important; text-decoration:none; color: inherit;}
 
   h4 {
     font-weight:normal;
-    font-size:150%;
+    font-size:110%;
     letter-spacing:0.1em;
     margin:1.5em 0 0.8em;
   }

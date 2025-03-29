@@ -1,0 +1,236 @@
+# Runge-Kutta d'ordre 4
+
+Par l'exemple.
+
+Nous cherchons à résoudre l'équation différentielle suivante :
+
+$$
+\dot{y} = t + y, \quad y(0) = 1
+$$
+
+avec un pas de temps $h = 0.1$. Nous allons estimer la valeur de $y$ pour $t_{n+1} = t_n + h$ en calculant les quatre coefficients $k_1, k_2, k_3, k_4$, puis la valeur finale $y_{n+1}$.
+
+---
+
+## Étape 1 : Calcul de $k_1$
+
+$$
+k_1 = h \cdot f(t_n, y_n)
+$$
+
+Avec $t_n = 0$, $y_n = 1$, et $f(t, y) = t + y$, on obtient :
+
+$$
+k_1 = 0.1 \cdot (0 + 1) = 0.1
+$$
+
+---
+
+## Étape 2 : Calcul de $k_2$
+
+$$
+k_2 = h \cdot f\left(t_n + \frac{h}{2}, y_n + \frac{k_1}{2}\right)
+$$
+
+Substituons les valeurs :
+
+$$
+k_2 = 0.1 \cdot f\left(0 + 0.05, 1 + \frac{0.1}{2}\right)
+= 0.1 \cdot f(0.05, 1.05)
+= 0.1 \cdot (0.05 + 1.05)
+= 0.1 \cdot 1.10
+= 0.11
+$$
+
+---
+
+## Étape 3 : Calcul de $k_3$
+
+$$
+k_3 = h \cdot f\left(t_n + \frac{h}{2}, y_n + \frac{k_2}{2}\right)
+$$
+
+Substituons les valeurs :
+
+$$
+k_3 = 0.1 \cdot f\left(0 + 0.05, 1 + \frac{0.11}{2}\right)
+= 0.1 \cdot f(0.05, 1.055)
+= 0.1 \cdot (0.05 + 1.055)
+= 0.1 \cdot 1.105
+= 0.1105
+$$
+
+---
+
+## Étape 4 : Calcul de $k_4$
+
+$$
+k_4 = h \cdot f(t_n + h, y_n + k_3)
+$$
+
+Substituons les valeurs :
+
+$$
+k_4 = 0.1 \cdot f(0 + 0.1, 1 + 0.1105)
+= 0.1 \cdot f(0.1, 1.1105)
+= 0.1 \cdot (0.1 + 1.1105)
+= 0.1 \cdot 1.2105
+= 0.12105
+$$
+
+---
+
+## Étape finale : Combinaison des coefficients
+
+La valeur suivante de $y_{n+1}$ est donnée par :
+
+$$
+y_{n+1} = y_n + \frac{1}{6}(k_1 + 2k_2 + 2k_3 + k_4)
+$$
+
+Substituons les valeurs :
+
+$$
+y_{n+1} = 1 + \frac{1}{6}(0.1 + 2(0.11) + 2(0.1105) + 0.12105)
+= 1 + \frac{1}{6}(0.66305)
+= 1 + 0.1105083
+= 1.11051
+$$
+
+---
+
+## Résultat final
+
+Pour $t_{n+1} = t_n + h = 0 + 0.1 = 0.1$, la valeur estimée est :
+
+$$
+y(0.1) \approx 1.11051
+$$
+
+---
+
+Ce processus peut être répété pour calculer les valeurs suivantes de $y(t)$ à chaque étape en avançant pas à pas dans le temps.
+
+## Valeur exacte
+
+# Résolution exacte de l'équation différentielle
+
+Pour résoudre l'équation différentielle donnée dans l'exemple :
+
+$$
+\dot{y} = t + y, \quad y(0) = 1,
+$$
+
+il s'agit d'une équation linéaire du premier ordre. La solution exacte peut être obtenue en utilisant la méthode classique de résolution des équations différentielles linéaires.
+
+---
+
+## Étapes de la résolution exacte
+
+### 1. Forme générale
+L'équation peut être réécrite sous la forme :
+
+$$
+\dot{y} - y = t.
+$$
+
+Ici, le terme homogène est $\dot{y} - y = 0$, et le terme non homogène est $t$.
+
+---
+
+### 2. Solution de l'équation homogène
+Résolvons $\dot{y} - y = 0$. On trouve que :
+
+$$
+y_h(t) = Ce^t,
+$$
+
+où $C$ est une constante arbitraire.
+
+---
+
+### 3. Recherche d'une solution particulière
+Pour le terme non homogène ($t$), essayons une solution particulière sous la forme :
+
+$$
+y_p(t) = At + B,
+$$
+
+où $A$ et $B$ sont des constantes à déterminer.
+
+En substituant dans l'équation $\dot{y} - y = t$, on obtient :
+
+$$
+A - (At + B) = t.
+$$
+
+En identifiant les coefficients :
+- Pour le terme en $t$, on a : $-A = 1 \implies A = -1$.
+- Pour le terme constant, on a : $A - B = 0 \implies B = -1$.
+
+Donc, la solution particulière est :
+
+$$
+y_p(t) = -t - 1.
+$$
+
+---
+
+### 4. Solution générale
+La solution générale est la somme de la solution homogène et de la solution particulière :
+
+$$
+y(t) = y_h(t) + y_p(t) = Ce^t - t - 1.
+$$
+
+---
+
+### 5. Application de la condition initiale
+Utilisons $y(0) = 1$ pour déterminer la constante $C$ :
+
+$$
+y(0) = Ce^0 - 0 - 1 = C - 1.
+$$
+
+Donc, $C = 2$.
+
+---
+
+## Solution exacte finale
+
+La solution exacte de l'équation différentielle est :
+
+$$
+y(t) = 2e^t - t - 1.
+$$
+
+---
+
+## Comparaison avec RK4
+
+En utilisant RK4 avec un pas de temps $h = 0.1$, nous avons obtenu une valeur approximative pour $y(0.1)$ : 
+
+$$
+y_{RK4}(0.1) \approx 1.11051.
+$$
+
+La valeur exacte pour $t = 0.1$, en substituant dans la solution finale, est :
+
+$$
+y(0.1) = 2e^{0.1} - 0.1 - 1.
+$$
+
+Calculons cette valeur :
+
+- $e^{0.1} \approx 1.10517$, donc :
+  
+$$
+y(0.1) = 2(1.10517) - 0.1 - 1 \approx 2.21034 - 0.1 - 1 \approx 1.11034.
+$$
+
+---
+
+## Conclusion
+
+La valeur obtenue par RK4 est très proche de la solution exacte ! RK4 donne $y_{RK4}(0.1) \approx 1.11051$, tandis que la solution exacte donne $y(0.1) \approx 1.11034$.
+
