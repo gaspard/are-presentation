@@ -8,7 +8,9 @@ const paths = Object.keys(files);
 export type Slide = {
   name: string;
   path: string;
-  file: string;
+  file: () => Promise<{
+    default: () => React.ReactNode;
+  }>;
   page: number;
   total: number;
   prev?: Slide;
@@ -23,7 +25,7 @@ export const slides: Slide[] = paths.map((path, idx) => {
     name,
     page: idx + 1,
     total: paths.length,
-    file: path,
+    file: files[path],
     path: name.startsWith("00-") ? "/" : `/${name.toLowerCase()}`,
     Component,
   };

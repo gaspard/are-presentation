@@ -26,12 +26,14 @@ export function Slide({ slide }: { slide: Slide }) {
       navigate(slide.next.path);
     }
   }
-
   useEffect(() => {
     hljs.highlightAll();
+  });
+
+  useEffect(() => {
     // preload next slide
     if (slide.next) {
-      import(/* @vite-ignore */ slide.next.file);
+      slide.next.file();
     }
     function press(e: KeyboardEvent) {
       if (e.key === "ArrowLeft") {
