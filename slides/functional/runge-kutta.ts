@@ -23,23 +23,48 @@ const ODE_DEFAULTS = {
   rungeKutta: true,
 };
 
-export function solve<T>(odeParam: ODE) {
+export function solve(odeParam: ODE) {
+  const {
+    ode: { steps },
+    next,
+    data,
+  } = stepper(odeParam);
+  for (let i = 1; i <= steps; ++i) next();
+  return data;
+}
+
+export type Stepper = {
+  ode: ODE;
+  data: Float32Array;
+  last: Float32Array;
+  step: number;
+  next: () => void;
+};
+
+export function stepper(odeParam: ODE): Stepper {
   if (odeParam.startValue.length !== odeParam.dimension) {
     throw new Error(
       `startValue has length ${odeParam.startValue.length} but dimension is ${odeParam.dimension} (they must be the same!)`
     );
   }
 
-  const { steps, dimension, startValue, step, duration, rungeKutta } =
-    Object.assign({}, ODE_DEFAULTS, odeParam) as ODE & typeof ODE_DEFAULTS;
+  const ode = Object.assign({}, ODE_DEFAULTS, odeParam) as ODE &
+    typeof ODE_DEFAULTS;
+  const { steps, dimension, startValue, step, duration, rungeKutta } = ode;
 
   // Assign data
   const buffer = new ArrayBuffer((steps + 1) * dimension * bpe);
 
-  let input = new Float32Array(buffer, 0, dimension);
-  input.set(startValue);
-
   const dt = duration / steps;
+
+  const stepper: Stepper = {
+    ode,
+    data: new Float32Array(buffer, 0, dimension * (steps + 1)),
+    last: new Float32Array(buffer, 0, dimension),
+    step: 0,
+    next: () => {},
+  };
+  stepper.last.set(startValue);
 
   if (rungeKutta) {
     // Setup buffers for Runge-Kutta (each k is computed for each dimension)
@@ -58,7 +83,9 @@ export function solve<T>(odeParam: ODE) {
     const x_k3 = new Float32Array(dimension);
     const k4 = new Float32Array(dimension);
 
-    for (let i = 1; i <= steps; ++i) {
+    stepper.next = () => {
+      const i = (stepper.step + 1) % (steps + 1);
+      const input = stepper.last;
       // k1 = dt * slope(x)
       step(input, dt, k1);
       // x_k1 = x + k1 / 2;
@@ -77,44 +104,20 @@ export function solve<T>(odeParam: ODE) {
       // x = x + 1/6 (k1 + 2 k2 + 2 k3 + k4)
       for (let j = 0; j < dimension; ++j)
         output[j] = input[j] + (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j]) / 6;
-      input = output;
-    }
+      stepper.last = output;
+      stepper.step = i;
+    };
   } else {
-    for (let i = 1; i <= steps; ++i) {
+    stepper.next = () => {
+      const i = (stepper.step + 1) % (steps + 1);
+      const input = stepper.last;
       const output = new Float32Array(buffer, i * dimension * bpe, dimension);
       // step outputs delta value
       step(input, dt, output);
       for (let j = 0; j < dimension; ++j) output[j] = input[j] + output[j];
-      input = output;
-    }
+      stepper.last = output;
+      stepper.step = i;
+    };
   }
-  return new Float32Array(buffer);
+  return stepper;
 }
-
-/*
-
-const n = 1000; // time steps
-const k = 8; // values per step (arbitrary)
-const width = n;
-const height = Math.ceil(k / 4);
-const data = new Float32Array(width * height * 4);
-
-// Example: recursive computation (Lotka-Volterra or custom model)
-let state = new Float32Array(k);
-// Initialize state as needed
-for (let i = 0; i < k; i++) state[i] = Math.random();
-
-for (let t = 0; t < n; t++) {
-  // Compute new state recursively
-  // Example: simple decay
-  for (let i = 0; i < k; i++) state[i] *= 0.99 + 0.01 * Math.sin(t + i);
-
-  // Store in texture data
-  for (let i = 0; i < k; i++) {
-    const pixelIndex = t + width * Math.floor(i / 4);
-    const channel = i % 4;
-    data[pixelIndex * 4 + channel] = state[i];
-  }
-}
-
-*/
