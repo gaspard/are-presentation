@@ -1,5 +1,5 @@
 import { describe, test } from "vitest";
-import { ODE, solve, stepper, Vect } from "./runge-kutta";
+import { makeStepper, ODE, solve, Vect } from "./runge-kutta";
 
 const spring: (
   k: number,
@@ -21,7 +21,7 @@ const spring: (
   // x and one for x'
   dimension: 2,
   // Must be an array of "dimension" numbers
-  startValue: [x0, v0],
+  startValue: [1, 0],
   // Spring: a = - (k/m) x
   // dx = v * dt
   // dv = - (k/m) x dt
@@ -87,12 +87,12 @@ describe("rungeKutta", () => {
 
 describe("stepper", (t) => {
   test("should compute one step at a time with runge-kutta", (t) => {
-    const s = stepper(x2(1, 20, true));
+    const s = makeStepper(x2(1, 20, true));
     t.expect([...s.last].map((f) => f.toFixed(4))).toEqual([
       "0.0000",
       "0.0000",
     ]);
-    s.next();
+    s.step();
     t.expect([...s.last].map((f) => f.toFixed(4))).toEqual([
       "0.0012",
       "0.0500",

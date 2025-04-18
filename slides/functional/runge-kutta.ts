@@ -15,7 +15,7 @@ export type ODE = {
   dimension: number;
   // Must be an array of "dimension" numbers;
   startValue: number[];
-  step: (input: Vect, dt: number, output: Vect) => void;
+  step: (input: Vect, t: number, output: Vect) => void;
 };
 
 const ODE_DEFAULTS = {
@@ -26,10 +26,10 @@ const ODE_DEFAULTS = {
 export function solve(odeParam: ODE) {
   const {
     ode: { steps },
-    next,
+    step,
     data,
-  } = stepper(odeParam);
-  for (let i = 1; i <= steps; ++i) next();
+  } = makeStepper(odeParam);
+  for (let i = 1; i <= steps; ++i) step();
   return data;
 }
 
@@ -37,11 +37,13 @@ export type Stepper = {
   ode: ODE;
   data: Float32Array;
   last: Float32Array;
-  step: number;
-  next: () => void;
+  rk: boolean;
+  t: number;
+  i: number;
+  step: () => void;
 };
 
-export function stepper(odeParam: ODE): Stepper {
+export function makeStepper(odeParam: ODE): Stepper {
   if (odeParam.startValue.length !== odeParam.dimension) {
     throw new Error(
       `startValue has length ${odeParam.startValue.length} but dimension is ${odeParam.dimension} (they must be the same!)`
@@ -61,63 +63,66 @@ export function stepper(odeParam: ODE): Stepper {
     ode,
     data: new Float32Array(buffer, 0, dimension * (steps + 1)),
     last: new Float32Array(buffer, 0, dimension),
-    step: 0,
-    next: () => {},
+    t: 0,
+    i: 0,
+    rk: rungeKutta,
+    step: () => {},
   };
   stepper.last.set(startValue);
 
-  if (rungeKutta) {
-    // Setup buffers for Runge-Kutta (each k is computed for each dimension)
-    // k1
-    // x + k1/2
-    // k2
-    // x + k2/2
-    // k3
-    // x + k3
-    // k4
-    const k1 = new Float32Array(dimension);
-    const x_k1 = new Float32Array(dimension);
-    const k2 = new Float32Array(dimension);
-    const x_k2 = new Float32Array(dimension);
-    const k3 = new Float32Array(dimension);
-    const x_k3 = new Float32Array(dimension);
-    const k4 = new Float32Array(dimension);
+  // Setup buffers for Runge-Kutta (each k is computed for each dimension)
+  // k1
+  // x + k1/2
+  // k2
+  // x + k2/2
+  // k3
+  // x + k3
+  // k4
+  const k1 = new Float32Array(dimension);
+  const x_k1 = new Float32Array(dimension);
+  const k2 = new Float32Array(dimension);
+  const x_k2 = new Float32Array(dimension);
+  const k3 = new Float32Array(dimension);
+  const x_k3 = new Float32Array(dimension);
+  const k4 = new Float32Array(dimension);
 
-    stepper.next = () => {
-      const i = (stepper.step + 1) % (steps + 1);
+  stepper.step = () => {
+    if (stepper.rk) {
+      const i = (stepper.i + 1) % (steps + 1);
+      const t = stepper.t;
       const input = stepper.last;
-      // k1 = dt * slope(x)
-      step(input, dt, k1);
+      // k1 / dt =  slope(x)
+      step(input, t, k1);
       // x_k1 = x + k1 / 2;
-      for (let j = 0; j < dimension; ++j) x_k1[j] = input[j] + k1[j] / 2;
+      for (let j = 0; j < dimension; ++j) x_k1[j] = input[j] + (dt * k1[j]) / 2;
       // k2 = dt * slope(x + k1/2)
-      step(x_k1, dt, k2);
+      step(x_k1, t + dt / 2, k2);
       // x_k2 = x + k2 / 2;
-      for (let j = 0; j < dimension; ++j) x_k2[j] = input[j] + k2[j] / 2;
+      for (let j = 0; j < dimension; ++j) x_k2[j] = input[j] + (dt * k2[j]) / 2;
       // k3 = dt * slope(x + k2/2)
-      step(x_k2, dt, k3);
+      step(x_k2, t, k3);
       // x_k3 = x + k3;
-      for (let j = 0; j < dimension; ++j) x_k3[j] = input[j] + k3[j];
+      for (let j = 0; j < dimension; ++j) x_k3[j] = input[j] + dt * k3[j];
       // k4 = dt * slope(x + k3)
-      step(x_k3, dt, k4);
+      step(x_k3, t, k4);
       const output = new Float32Array(buffer, i * dimension * bpe, dimension);
       // x = x + 1/6 (k1 + 2 k2 + 2 k3 + k4)
       for (let j = 0; j < dimension; ++j)
-        output[j] = input[j] + (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j]) / 6;
+        output[j] =
+          input[j] + (dt * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j])) / 6;
       stepper.last = output;
-      stepper.step = i;
-    };
-  } else {
-    stepper.next = () => {
-      const i = (stepper.step + 1) % (steps + 1);
+      stepper.i = i;
+    } else {
+      const i = (stepper.i + 1) % (steps + 1);
+      const t = stepper.t + dt;
       const input = stepper.last;
       const output = new Float32Array(buffer, i * dimension * bpe, dimension);
       // step outputs delta value
-      step(input, dt, output);
-      for (let j = 0; j < dimension; ++j) output[j] = input[j] + output[j];
+      step(input, t, output);
+      for (let j = 0; j < dimension; ++j) output[j] = input[j] + output[j] * dt;
       stepper.last = output;
-      stepper.step = i;
-    };
-  }
+      stepper.i = i;
+    }
+  };
   return stepper;
 }
