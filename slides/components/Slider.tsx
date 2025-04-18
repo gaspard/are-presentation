@@ -1,11 +1,5 @@
 import * as d3 from "d3";
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const randomX = d3.randomNormal(0, 1);
 const randomY = d3.randomNormal(0, 1);
@@ -61,7 +55,7 @@ export function Slider() {
     return () => document.removeEventListener("mousemove", move);
   }, []);
 
-  const handle = (setter: Dispatch<SetStateAction<number>>) => (e) => {
+  const handle = (setter: (v: number) => void) => (e) => {
     setter(Number(e.target.value));
   };
 

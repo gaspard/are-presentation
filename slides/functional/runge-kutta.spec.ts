@@ -4,14 +4,14 @@ import { makeStepper, ODE, solve, Vect } from "./runge-kutta";
 const spring: (
   k: number,
   m: number,
-  duration?: number,
+  dt?: number,
   steps?: number,
   rungeKutta?: boolean
-) => ODE = (k, m, duration = 1, steps = 100, rungeKutta = true) => ({
+) => ODE = (k, m, dt = 0.01, steps = 100, rungeKutta = true) => ({
   // Number of steps in the output (more steps => finer computations).
   steps,
   // Duration for the steps (in seconds)
-  duration,
+  dt,
 
   // Runge-Kutta
   rungeKutta: rungeKutta,
@@ -25,7 +25,7 @@ const spring: (
   // Spring: a = - (k/m) x
   // dx = v * dt
   // dv = - (k/m) x dt
-  step: (input: Vect, dt: number, output: Vect) => {
+  deriv: (input: Vect, dt: number, output: Vect) => {
     // x_{n+1} = x_{n} + v_{n} dt
     output[0] = input[1] * dt;
     // v_{n+1} = v_{n} - (k/m) x_{n} dt
@@ -33,15 +33,15 @@ const spring: (
   },
 });
 
-const x2: (duration: number, steps: number, rungeKutta: boolean) => ODE = (
-  duration,
+const x2: (dt: number, steps: number, rungeKutta: boolean) => ODE = (
+  dt,
   steps,
   rungeKutta
 ) => ({
   // Number of steps in the output (more steps => finer computations).
   steps,
   // Duration for the steps (in seconds)
-  duration,
+  dt,
 
   // Runge-Kutta
   rungeKutta: rungeKutta,
@@ -52,7 +52,7 @@ const x2: (duration: number, steps: number, rungeKutta: boolean) => ODE = (
   dimension: 2,
   // Must be an array of "dimension" numbers
   startValue: [0, 0],
-  step: (input: Vect, dt: number, output: Vect) => {
+  deriv: (input: Vect, dt: number, output: Vect) => {
     // dx = v dt
     output[0] = input[1] * dt;
     // dv = dt
@@ -62,7 +62,7 @@ const x2: (duration: number, steps: number, rungeKutta: boolean) => ODE = (
 
 describe("rungeKutta", () => {
   test("should compute one step", (t) => {
-    const data = solve(x2(1, 2, false));
+    const data = solve(x2(0.5, 2, false));
     t.expect([...data]).toEqual([
       // t = 0
       0, // x0
@@ -92,7 +92,7 @@ describe("stepper", (t) => {
       "0.0000",
       "0.0000",
     ]);
-    s.step();
+    s.step(1);
     t.expect([...s.last].map((f) => f.toFixed(4))).toEqual([
       "0.0012",
       "0.0500",
