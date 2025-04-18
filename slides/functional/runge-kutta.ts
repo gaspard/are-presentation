@@ -5,13 +5,11 @@ const bpe = Float32Array.BYTES_PER_ELEMENT;
 export type ODE = {
   // Number of steps in the output (more steps => finer computations).
   steps: number;
-  // Starting time value (defaults to 0)
-  start?: number;
   // Time rangee length (defaults to 1)
   duration?: number;
 
-  // Order of the Runge-Kutta (more => better simulation, defaults to 4)
-  order?: number;
+  // Use 4th order of Runge-Kutta
+  rungeKutta?: boolean;
 
   // Number of parameters in the equation (without t)
   dimension: number;
@@ -21,9 +19,8 @@ export type ODE = {
 };
 
 const ODE_DEFAULTS = {
-  start: 0,
   duration: 1,
-  order: 4,
+  rungeKutta: true,
 };
 
 export function solve<T>(odeParam: ODE) {
@@ -33,28 +30,64 @@ export function solve<T>(odeParam: ODE) {
     );
   }
 
-  const { steps, dimension, startValue, step, duration, order } = Object.assign(
-    {},
-    ODE_DEFAULTS,
-    odeParam
-  ) as ODE & typeof ODE_DEFAULTS;
-  // Setup buffers for Runge-Kutta
-  // const rk = new ArrayBuffer(order * dimension * bpe);
+  const { steps, dimension, startValue, step, duration, rungeKutta } =
+    Object.assign({}, ODE_DEFAULTS, odeParam) as ODE & typeof ODE_DEFAULTS;
 
   // Assign data
   const buffer = new ArrayBuffer((steps + 1) * dimension * bpe);
+
   let input = new Float32Array(buffer, 0, dimension);
   input.set(startValue);
 
   const dt = duration / steps;
-  for (let i = 1; i <= steps; ++i) {
-    // no runge kutta for now
-    console.log(i);
-    const output = new Float32Array(buffer, i * dimension * bpe, dimension);
-    step(input, dt, output);
-    input = output;
-  }
 
+  if (rungeKutta) {
+    // Setup buffers for Runge-Kutta (each k is computed for each dimension)
+    // k1
+    // x + k1/2
+    // k2
+    // x + k2/2
+    // k3
+    // x + k3
+    // k4
+    const k1 = new Float32Array(dimension);
+    const x_k1 = new Float32Array(dimension);
+    const k2 = new Float32Array(dimension);
+    const x_k2 = new Float32Array(dimension);
+    const k3 = new Float32Array(dimension);
+    const x_k3 = new Float32Array(dimension);
+    const k4 = new Float32Array(dimension);
+
+    for (let i = 1; i <= steps; ++i) {
+      // k1 = dt * slope(x)
+      step(input, dt, k1);
+      // x_k1 = x + k1 / 2;
+      for (let j = 0; j < dimension; ++j) x_k1[j] = input[j] + k1[j] / 2;
+      // k2 = dt * slope(x + k1/2)
+      step(x_k1, dt, k2);
+      // x_k2 = x + k2 / 2;
+      for (let j = 0; j < dimension; ++j) x_k2[j] = input[j] + k2[j] / 2;
+      // k3 = dt * slope(x + k2/2)
+      step(x_k2, dt, k3);
+      // x_k3 = x + k3;
+      for (let j = 0; j < dimension; ++j) x_k3[j] = input[j] + k3[j];
+      // k4 = dt * slope(x + k3)
+      step(x_k3, dt, k4);
+      const output = new Float32Array(buffer, i * dimension * bpe, dimension);
+      // x = x + 1/6 (k1 + 2 k2 + 2 k3 + k4)
+      for (let j = 0; j < dimension; ++j)
+        output[j] = input[j] + (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j]) / 6;
+      input = output;
+    }
+  } else {
+    for (let i = 1; i <= steps; ++i) {
+      const output = new Float32Array(buffer, i * dimension * bpe, dimension);
+      // step outputs delta value
+      step(input, dt, output);
+      for (let j = 0; j < dimension; ++j) output[j] = input[j] + output[j];
+      input = output;
+    }
+  }
   return new Float32Array(buffer);
 }
 
