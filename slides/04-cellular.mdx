@@ -4,26 +4,6 @@ import { Cellular } from "./components/Cellular";
 
 <Cellular />
 
-Chaque cellule possède p valeurs dans $\R$. Nous définissons un type cellule $C = \R^p$, ainsi que deux matrices $g_0$ et $g_1$ de dimension $n\times m$:
-
-$$
-g_0, g_1 \in M_{n\times m}(C)
-$$
-
-Nous définissons aussi une cellule de bord (edge) $e \in C$.
-
-Nous définissons également une application $f : C^9 \to C$, ainsi qu'un selecteur de cellule voisine $s : (i \in {1, ..., n}, j \in {1, ..., m}) \to ({1,...,n},{1,...,m})^9$ (si la cellule est au bord, les cellulles voisines "dans le vide" sont remplacées par $e$.
-
-Lors de l'initialisation, des valeurs aléatoires (ou d'un seed) sont définies pour chaque cellule de $g_0$. Nous calculons ensuite les valeurs pour $g_1$ selon:
-
-$$
-\forall\ (i,j) \in n \times m,\ \ \ g_{1\ (i,j)} = f (
-$$
-
-### Sous-titre
-
-# Automate cellulaire
-
 Chaque cellule possède $p$ valeurs dans $\mathbb{R}$. Nous définissons un type cellule $C = \mathbb{R}^p$, ainsi que deux matrices $g_0$ et $g_1$ de dimension $n \times m$ :
 
 $$
@@ -56,3 +36,5 @@ g_1(i,j) = f\big(\ s (g_0, i, j)\ )
 $$
 
 À l'étape suivante, nous calculerons les valeurs pour $g_0$ à partir de $g_1$ de la même manière.
+
+L'automate cellulare possède de plus une option "wrap" pour relier les bords opposés entre eux, de sorte que la simulation se comporte comme si elle se déroulait sur un tore.
