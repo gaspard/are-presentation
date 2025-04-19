@@ -113,6 +113,7 @@ export function makeCellular(
   init: Float32Array = snoise(grid),
   e: Float32Array = new Float32Array(grid.p)
 ): Cellular {
+  console.log(init);
   const g = [makeGrid(grid, init, e), makeGrid(grid, init, e)];
   const cellular: Cellular = {
     grid,
@@ -173,13 +174,27 @@ function fillNoiseArray(
   }
 }
 
-function snoise(g: { n: number; m: number; p: number }): Float32Array {
+export function snoise(
+  g: { n: number; m: number; p: number },
+  range = [0, 1.0],
+  scales = [0.1, 0.02, 0.008]
+): Float32Array {
   const arr = new Float32Array(g.n * g.m * g.p);
 
   for (let i = 0; i < g.p; ++i) {
-    fillNoiseArray(arr, g, i, 0.1 + Math.random() * 0.1);
-    fillNoiseArray(arr, g, i, 0.02 + Math.random() * 0.2);
-    fillNoiseArray(arr, g, i, 0.008);
+    for (const s of scales) {
+      fillNoiseArray(arr, g, i, s);
+    }
+    scale(arr, range);
   }
   return arr;
+}
+
+function scale(arr: Float32Array, range: number[]) {
+  const ra = range[1] - range[0];
+  const ra2 = ra / 2;
+  const ra4 = ra / 4; // need to divide by an extra 4, noise2D range is [-1, 1]
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = ra2 + ra4 * arr[i];
+  }
 }

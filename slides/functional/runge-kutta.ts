@@ -130,3 +130,51 @@ export function makeStepper(odeParam: ODE): Stepper {
   };
   return stepper;
 }
+
+export function kutta(
+  { p, dt }: { p: number; dt: number },
+  deriv: (
+    input: Float32Array,
+    t: number,
+    output: Float32Array,
+    inputOffset: number
+  ) => void
+) {
+  const k1 = new Float32Array(p);
+  const x_k1 = new Float32Array(p);
+  const k2 = new Float32Array(p);
+  const x_k2 = new Float32Array(p);
+  const k3 = new Float32Array(p);
+  const x_k3 = new Float32Array(p);
+  const k4 = new Float32Array(p);
+
+  return (
+    input: Float32Array,
+    t: number,
+    output: Float32Array,
+    inputOffset: number,
+    outputOffset: number
+  ) => {
+    // k1 / dt =  slope(x)
+    deriv(input, t, k1, inputOffset, 0);
+    // x_k1 = x + k1 / 2;
+    for (let j = 0; j < p; ++j)
+      x_k1[j] = input[inputOffset + j] + (dt * k1[j]) / 2;
+    // k2 = dt * slope(x + k1/2)
+    deriv(x_k1, t + dt / 2, k2, 0, 0);
+    // x_k2 = x + k2 / 2;
+    for (let j = 0; j < p; ++j)
+      x_k2[j] = input[inputOffset + j] + (dt * k2[j]) / 2;
+    // k3 = dt * slope(x + k2/2)
+    deriv(x_k2, t + dt / 2, k3, 0, 0);
+    // x_k3 = x + k3;
+    for (let j = 0; j < p; ++j) x_k3[j] = input[inputOffset + j] + dt * k3[j];
+    // k4 = dt * slope(x + k3)
+    deriv(x_k3, t, k4, 0, 0);
+    // x = x + 1/6 (k1 + 2 k2 + 2 k3 + k4)
+    for (let j = 0; j < p; ++j)
+      output[outputOffset + j] =
+        input[inputOffset + j] +
+        (dt * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j])) / 6;
+  };
+}
