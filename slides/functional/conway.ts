@@ -1,6 +1,6 @@
 import { Cellular, Grid, makeCellular } from "./cellular";
 
-const ON = "o";
+const ON = "X";
 const OFF = ".";
 
 export function txt2Array(text: string): Float32Array {
@@ -22,7 +22,7 @@ export function grid2Txt({ n, m, output }: Grid): string {
   for (let i = 0; i < n; ++i) {
     const r: string[] = [];
     for (let j = 0; j < m; ++j) {
-      r.push(output[i * m + j][0] === 1 ? ON : OFF);
+      r.push(output[i * m + j][0] === 1 ? ON : " ");
     }
     g.push(r.join(" "));
   }
