@@ -1,9 +1,10 @@
-import { observe, tilia, useTilia } from "@tilia/react";
+import { observe, tilia } from "@tilia/react";
 import * as React from "react";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { makeStepper, ODE, Vect } from "../functional/runge-kutta";
+import { Inputs } from "./lib/Input";
 
 const settings = tilia({
   setup: {
@@ -41,8 +42,6 @@ const range = {
   },
 };
 
-type Range = Record<string, number[]>;
-
 type Settings = typeof settings;
 
 let stepper = makeStepper(prey(settings));
@@ -73,74 +72,11 @@ export function Simulator() {
 
   return (
     <>
-      <div className="flex flex-col w-1/2">
-        {typedKeys(settings.setup).map((k) => (
-          <Input
-            key={k}
-            branch={settings.setup}
-            entry={k}
-            range={range.setup}
-          />
-        ))}
-      </div>
-      <div className="flex flex-col w-1/2">
-        {typedKeys(settings.live).map((k) => (
-          <Input key={k} branch={settings.live} entry={k} range={range.live} />
-        ))}
-      </div>
+      <Inputs branch={settings.setup} range={range.setup} />
+      <Inputs branch={settings.live} range={range.live} />
       <div ref={domElem} />
     </>
   );
-}
-
-function typedKeys<T extends Object>(obj: T): (keyof T)[] {
-  return Object.keys(obj) as any;
-}
-
-function Input<T>({
-  branch,
-  entry,
-  range,
-}: {
-  branch: T;
-  entry: keyof T;
-  range: Range;
-}) {
-  const obj = useTilia(branch);
-  const v = obj[entry];
-  if (typeof v === "number") {
-    const r = range[entry as any];
-    return (
-      <>
-        <label>
-          {String(entry)}: {v.toFixed(3)}
-        </label>
-        <input
-          type="range"
-          min={r[0]}
-          max={r[1]}
-          step={r[2]}
-          value={v}
-          onChange={(e) => {
-            obj[entry] = Number(e.target.value) as any;
-          }}
-        />
-      </>
-    );
-  } else if (typeof v === "boolean") {
-    return (
-      <>
-        <label>{String(entry)}</label>
-        <input
-          type="checkbox"
-          checked={v}
-          onChange={() => {
-            obj[entry] = !v as any;
-          }}
-        />
-      </>
-    );
-  }
 }
 
 function spring(

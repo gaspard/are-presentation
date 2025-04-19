@@ -56,14 +56,14 @@ export function conway(input: Float32Array[], _, output: Float32Array) {
 }
 
 export function randomLife(n: number, m: number): Cellular {
+  const p = 1;
   return makeCellular(
     {
-      p: 1,
+      p,
       n,
       m,
       wrap: true,
     },
-    conway,
-    Float32Array.from({ length: n * m }, () => (Math.random() < 0.5 ? 0 : 1))
+    conway
   );
 }

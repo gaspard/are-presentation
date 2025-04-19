@@ -1,3 +1,4 @@
+import { createNoise2D } from "simplex-noise";
 export type Vect = Float32Array;
 // 4 bytes to encode Float32
 const bpe = Float32Array.BYTES_PER_ELEMENT;
@@ -33,7 +34,7 @@ export interface Cellular {
   i: number;
   // operation
   t: number;
-  next: () => Grid;
+  next: (time: number) => Grid;
   step: (input: Float32Array[], t: number, output: Float32Array) => void;
 }
 
@@ -109,7 +110,7 @@ export function makeGrid(
 export function makeCellular(
   grid: GridParam,
   step: Cellular["step"],
-  init: Float32Array,
+  init: Float32Array = snoise(grid),
   e: Float32Array = new Float32Array(grid.p)
 ): Cellular {
   const g = [makeGrid(grid, init, e), makeGrid(grid, init, e)];
@@ -122,8 +123,9 @@ export function makeCellular(
     next: () => g[0],
   };
 
-  cellular.next = () => {
-    const { step, t, g } = cellular;
+  cellular.next = (t: number) => {
+    const { step, g } = cellular;
+    cellular.t = t;
     cellular.i = (cellular.i + 1) % 2;
     const g0 = g[(cellular.i + 1) % 2];
     const g1 = g[cellular.i];
@@ -144,4 +146,40 @@ function loop(
   for (let i = 0; i < len; ++i) {
     step(input[i], t, output[i]);
   }
+}
+
+// Create a 2D noise function
+const noise2D = createNoise2D();
+
+function fillNoiseArray(
+  arr: Float32Array,
+  {
+    n,
+    m,
+    p,
+  }: {
+    n: number;
+    m: number;
+    p: number;
+  },
+  pidx: number,
+  scale: number = 1
+): void {
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      const idx = (i * m + j) * p + pidx;
+      arr[idx] = arr[idx] + noise2D(j * scale, i * scale);
+    }
+  }
+}
+
+function snoise(g: { n: number; m: number; p: number }): Float32Array {
+  const arr = new Float32Array(g.n * g.m * g.p);
+
+  for (let i = 0; i < g.p; ++i) {
+    fillNoiseArray(arr, g, i, 0.1 + Math.random() * 0.1);
+    fillNoiseArray(arr, g, i, 0.02 + Math.random() * 0.2);
+    fillNoiseArray(arr, g, i, 0.008);
+  }
+  return arr;
 }
