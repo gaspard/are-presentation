@@ -1,0 +1,54 @@
+# Automate cellulaire
+
+Chaque cellule possède p valeurs dans $\R$. Nous définissons un type cellule $C = \R^p$, ainsi que deux matrices $g_0$ et $g_1$ de dimension $n\times m$:
+
+$$
+g_0, g_1 \in M_{n\times m}(C)
+$$
+
+Nous définissons aussi une cellule de bord (edge) $e \in C$.
+
+Nous définissons également une application $f : C^9 \to C$, ainsi qu'un selecteur de cellule voisine $s : (i \in {1, ..., n}, j \in {1, ..., m}) \to ({1,...,n},{1,...,m})^9$ (si la cellule est au bord, les cellulles voisines "dans le vide" sont remplacées par $e$.
+
+Lors de l'initialisation, des valeurs aléatoires (ou d'un seed) sont définies pour chaque cellule de $g_0$. Nous calculons ensuite les valeurs pour $g_1$ selon:
+
+$$
+\forall\ (i,j) \in n \times m,\ \ \ g_{1\ (i,j)} = f (
+$$
+
+### Sous-titre
+
+# Automate cellulaire
+
+Chaque cellule possède $p$ valeurs dans $\mathbb{R}$. Nous définissons un type cellule $C = \mathbb{R}^p$, ainsi que deux matrices $g_0$ et $g_1$ de dimension $n \times m$ :
+
+$$
+g_0,\, g_1 \in M_{n \times m}(C)
+$$
+
+où $M_{n \times m}(C)$ désigne l'ensemble des matrices de taille $n \times m$ à valeurs dans $C$.
+
+Nous définissons aussi une cellule de bord (edge) $e \in C$.
+
+Nous définissons également une application
+
+$$
+f : C^9 \to C,
+$$
+
+ainsi qu'un sélecteur de cellules voisines
+
+$$
+s : (g, e, i, j) \in \ C \times \{g_0, g_1\} \times \{1, \ldots, n\} \times \{1, \ldots, m\} \longmapsto (v_1, \ldots, v_9) \in C^9,
+$$
+
+qui, pour chaque grille $g$ et chaque cellule $(i, j)$, retourne les cellules de ses 8 voisines et d'elle-même (par exemple, dans l'ordre d'une fenêtre $3 \times 3$). Si une cellule voisine se trouve en dehors de la grille (bord), on considère que sa valeur est $e$.
+
+À l'initialisation, des valeurs aléatoires ou déterminées par une graine (seed) sont attribuées à chaque cellule de $g_0$. Nous calculons ensuite les valeurs pour $g_1$ selon :
+
+$$
+\forall (i,j) \in \{1, \ldots, n\} \times \{1, \ldots, m\}, \quad
+g_1(i,j) = f\big(\ s (g_0, i, j)\ )
+$$
+
+À l'étape suivante, nous calculerons les valeurs pour $g_0$ à partir de $g_1$ de la même manière.

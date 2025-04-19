@@ -26,10 +26,10 @@ const spring: (
   // dx = v * dt
   // dv = - (k/m) x dt
   deriv: (input: Vect, dt: number, output: Vect) => {
-    // x_{n+1} = x_{n} + v_{n} dt
-    output[0] = input[1] * dt;
-    // v_{n+1} = v_{n} - (k/m) x_{n} dt
-    output[1] = -(k / m) * input[0] * dt;
+    // x_{n+1} / dt = x_{n} + v_{n}
+    output[0] = input[1];
+    // v_{n+1} / dt = v_{n} - (k/m) x_{n}
+    output[1] = -(k / m) * input[0];
   },
 });
 
@@ -52,11 +52,11 @@ const x2: (dt: number, steps: number, rungeKutta: boolean) => ODE = (
   dimension: 2,
   // Must be an array of "dimension" numbers
   startValue: [0, 0],
-  deriv: (input: Vect, dt: number, output: Vect) => {
-    // dx = v dt
-    output[0] = input[1] * dt;
-    // dv = dt
-    output[1] = dt;
+  deriv: (input: Vect, t: number, output: Vect) => {
+    // dx/dt = v
+    output[0] = input[1];
+    // dv/dt = 1
+    output[1] = 1;
   },
 });
 
@@ -79,8 +79,8 @@ describe("rungeKutta", () => {
   test("should compute one step with runge-kutta", (t) => {
     const data = solve(x2(1, 20, true));
     t.expect([data[40], data[41]].map((f) => f.toFixed(4))).toEqual([
-      "0.5000",
-      "1.0000",
+      "200.0000",
+      "20.0000",
     ]);
   });
 });
@@ -94,8 +94,8 @@ describe("stepper", (t) => {
     ]);
     s.step(1);
     t.expect([...s.last].map((f) => f.toFixed(4))).toEqual([
-      "0.0012",
-      "0.0500",
+      "0.5000",
+      "1.0000",
     ]);
   });
 });

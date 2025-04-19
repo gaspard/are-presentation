@@ -84,10 +84,12 @@ a {outline:none !important; text-decoration:none; color: inherit;}
     margin:1em 0;
   }
 
+  /*
   p + p {
     margin:0;
     text-indent:1.5em;
   }
+  */
 
   p + ul, p + ol, p + dl { margin-bottom:1.5em; }
   p.lead + p {
