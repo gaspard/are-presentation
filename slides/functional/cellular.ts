@@ -31,9 +31,12 @@ export interface Cellular {
   grid: GridParam;
   // Double buffers
   g: Grid[];
+  output: Grid;
+  input: Grid;
   i: number;
   // operation
   t: number;
+  swap: () => void;
   next: (time: number) => Grid;
   step: (input: Float32Array[], t: number, output: Float32Array) => void;
 }
@@ -118,20 +121,27 @@ export function makeCellular(
   const cellular: Cellular = {
     grid,
     g,
+    input: g[1],
+    output: g[0],
     t: 0,
     i: 0,
     step,
+    swap: () => {},
     next: () => g[0],
   };
 
-  cellular.next = (t: number) => {
-    const { step, g } = cellular;
-    cellular.t = t;
+  cellular.swap = () => {
     cellular.i = (cellular.i + 1) % 2;
-    const g0 = g[(cellular.i + 1) % 2];
-    const g1 = g[cellular.i];
-    loop(g0.input, t, g1.output, step);
-    return g1;
+    cellular.input = g[(cellular.i + 1) % 2];
+    cellular.output = g[cellular.i];
+  };
+
+  cellular.next = (t: number) => {
+    cellular.swap();
+    const { step, input, output } = cellular;
+    cellular.t = t;
+    loop(input.input, t, output.output, step);
+    return output;
   };
 
   return cellular;

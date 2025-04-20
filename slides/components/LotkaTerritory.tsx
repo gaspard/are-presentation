@@ -7,10 +7,11 @@ import { makeKernel } from "../functional/diffuse";
 import { kutta, ODE } from "../functional/runge-kutta";
 import { Inputs } from "./lib/Input";
 
+const g = { n: 400, m: 400, p: 2, wrap: true };
 const cellular = makeCellular(
-  { n: 400, m: 400, p: 2 },
+  g,
   makeKernel({ dt: 0.0001, f: 0.01 }),
-  snoise(g, [2, 10], [0.0002])
+  snoise(g, [0, 10], [0.002, 0.15])
 );
 
 const lotka = tilia({
@@ -19,10 +20,10 @@ const lotka = tilia({
     prey: 10,
     predator: 15,
     steps: 840,
-    dt: 0.006,
-    speed: 3.0,
   },
   live: {
+    speed: 3.0,
+    dt: 0.006,
     alpha: 0.72,
     beta: 0.02,
     gamma: 0.01,
@@ -37,10 +38,10 @@ const lotkaRange = {
     prey: [1, 40, 0.01],
     predator: [1, 40, 0.01],
     steps: [1, 2000, 1],
-    dt: [0.0001, 0.1, 0.0001],
-    speed: [0.1, 100],
   },
   live: {
+    speed: [0.1, 100],
+    dt: [0.0001, 0.1, 0.0001],
     alpha: [0, 1, 0.01],
     beta: [0, 1, 0.01],
     gamma: [0, 1, 0.01],
@@ -52,12 +53,13 @@ const lotkaRange = {
 type LotkaSettings = typeof lotka;
 
 const stepper = {
+  dt: lotka.live.dt,
   step(input: Float32Array, time: number, output: Float32Array) {},
 };
 
 function updateLotka() {
-  const deriv = preyDeriv(lotka.live);
-  const step = kutta({ p: 2, dt: lotka.setup.dt }, deriv);
+  const step = kutta({ p: 2, dt: lotka.live.dt }, preyDeriv(lotka.live));
+  stepper.dt = lotka.live.dt;
   stepper.step = (input: Float32Array, time: number, output: Float32Array) => {
     // p = 2
     const len = input.length / 2;
@@ -145,9 +147,9 @@ function displayPoints(scene: Scene, scale: number = 1): Simulation {
       varying vec2 vUv;
   
       void main() {
-        float u = texture2D(uData, vUv).r / 20.;
-        float v = texture2D(uData, vUv).g / 20.;
-        vec3 color = vec3(u, v, 0.);
+        float prey = texture2D(uData, vUv).r / 60.;
+        float predator = texture2D(uData, vUv).g / 60.;
+        vec3 color = vec3(predator, prey, 0.);
         gl_FragColor = vec4(color, 1.);
       }
     `,
@@ -157,13 +159,18 @@ function displayPoints(scene: Scene, scale: number = 1): Simulation {
 
   function step(time: number) {
     // Diffuse
-    const grid = cellular.next(time);
-    // Lotka-Volterra
-    const input = cellular.g[cellular.i];
-    const output = cellular.g[(cellular.i + 1) % 2];
-    stepper.step(input.values, time, output.values);
-    cellular.i = (cellular.i + 1) % 2; // swap again
-    texture.image.data = cellular.g[cellular.i].values;
+    let t = cellular.t;
+    // maybe diffuse should be in the while loop (or we adapt dt ?)
+    cellular.next(time);
+    while (t < time) {
+      cellular.swap();
+      // Lotka-Volterra
+      stepper.step(cellular.input.values, time, cellular.output.values);
+      t += stepper.dt;
+    }
+    cellular.t = time;
+
+    texture.image.data = cellular.output.values;
 
     uniforms.uTime.value = time;
     texture.needsUpdate = true;
@@ -298,10 +305,10 @@ function clickAction(
 
 function prey({ setup, live }: LotkaSettings): ODE {
   const ode: ODE = {
-    dt: setup.dt,
-    steps: setup.steps,
-    speed: setup.speed,
-    rungeKutta: live.rungeKutta,
+    dt: live.dt,
+    steps: 1,
+    speed: live.speed,
+    rungeKutta: true,
     dimension: 3,
     startValue: [setup.prey, setup.predator, 0], // MUST BE 3 for THREE.js 3D position
     deriv: preyDeriv(live),
@@ -310,12 +317,12 @@ function prey({ setup, live }: LotkaSettings): ODE {
 }
 
 function preyDeriv({ alpha, beta, gamma, delta }: LotkaSettings["live"]) {
-  return (input: Vect, t: number, output: Vect, inputOffset: number) => {
-    const x = input[inputOffset];
-    const y = input[inputOffset + 1];
+  return (input: Vect, t: number, output: Vect, offset: number) => {
+    const x = input[offset];
+    const y = input[offset + 1];
     // dx / dt = alpha x - beta x y
-    output[0] = alpha * x - beta * x * y;
+    output[offset] = alpha * x - beta * x * y;
     // dy / dt = gamma x y - delta y
-    output[1] = gamma * x * y - delta * y;
+    output[offset + 1] = gamma * x * y - delta * y;
   };
 }

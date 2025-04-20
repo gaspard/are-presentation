@@ -40,8 +40,8 @@ export function makeKernel({ dt }: Settings) {
     const du = lap_u;
     const dv = lap_v;
 
-    output[0] = u + du * dt;
-    output[1] = v + dv * dt;
+    output[0] = u + du * 100 * dt;
+    output[1] = v + dv * 100 * dt;
   };
 }
 
