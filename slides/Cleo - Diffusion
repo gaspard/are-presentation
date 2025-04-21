@@ -1,1 +1,3 @@
+import { LotkaVolterra } from "./components/LotkaVolterra";
+
 # Le modèle de Gatenby-Gawlinski
