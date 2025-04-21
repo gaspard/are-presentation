@@ -41,7 +41,10 @@ export type Stepper = {
   step: (elapsed: number) => void;
 };
 
-export function makeStepper(odeParam: ODE): Stepper {
+export function makeStepper(
+  odeParam: ODE,
+  init?: (data: Float32Array) => void
+): Stepper {
   if (odeParam.startValue.length !== odeParam.dimension) {
     throw new Error(
       `startValue has length ${odeParam.startValue.length} but dimension is ${odeParam.dimension} (they must be the same!)`
@@ -54,10 +57,14 @@ export function makeStepper(odeParam: ODE): Stepper {
 
   // Assign data
   const buffer = new ArrayBuffer((steps + 1) * dimension * bpe);
+  const data = new Float32Array(buffer, 0, dimension * (steps + 1));
+  if (init) {
+    init(data);
+  }
 
   const stepper: Stepper = {
     ode,
-    data: new Float32Array(buffer, 0, dimension * (steps + 1)),
+    data,
     last: new Float32Array(buffer, 0, dimension),
     steps,
     t: 0,
@@ -87,8 +94,8 @@ export function makeStepper(odeParam: ODE): Stepper {
   const k4 = new Float32Array(dimension);
 
   stepper.step = (atime: number) => {
-    const time = atime * speed;
-    const dt = ode.dt * speed;
+    const time = atime * ode.speed;
+    const dt = ode.dt * ode.speed;
     let t = stepper.t;
     const deriv = stepper.deriv;
     while (t < time) {
@@ -155,26 +162,26 @@ export function kutta(
     inputOffset: number,
     outputOffset: number
   ) => {
-    // k1 / dt =  slope(x)
+    const dt2 = dt / 2;
+    // k1 / dt =  f (x)
     deriv(input, t, k1, inputOffset);
-    // x_k1 = x + k1 / 2;
-    for (let j = 0; j < p; ++j)
-      x_k1[j] = input[inputOffset + j] + (dt * k1[j]) / 2;
-    // k2 = dt * slope(x + k1/2)
-    deriv(x_k1, t + dt / 2, k2, 0);
-    // x_k2 = x + k2 / 2;
-    for (let j = 0; j < p; ++j)
-      x_k2[j] = input[inputOffset + j] + (dt * k2[j]) / 2;
-    // k3 = dt * slope(x + k2/2)
-    deriv(x_k2, t + dt / 2, k3, 0);
-    // x_k3 = x + k3;
-    for (let j = 0; j < p; ++j) x_k3[j] = input[inputOffset + j] + dt * k3[j];
-    // k4 = dt * slope(x + k3)
+    // x_k1 = x + k1 * dt/2;
+    for (let j = 0; j < p; ++j) x_k1[j] = input[inputOffset + j] + k1[j] * dt2;
+    // k2 = f (x + k1 * dt/2)
+    deriv(x_k1, t + dt2, k2, 0);
+    // x_k2 = x + k2 * dt/2;
+    for (let j = 0; j < p; ++j) x_k2[j] = input[inputOffset + j] + k2[j] * dt2;
+    // k3 = f (x + k2 * dt/2)
+    deriv(x_k2, t + dt2, k3, 0);
+    // x_k3 = x + k3 * dt;
+    for (let j = 0; j < p; ++j) x_k3[j] = input[inputOffset + j] + k3[j] * dt;
+    // k4 = f (x + k3)
     deriv(x_k3, t, k4, 0);
-    // x = x + 1/6 (k1 + 2 k2 + 2 k3 + k4)
+
+    const dt6 = dt / 6;
+    // x = x + 1/6 (k1 + 2 k2 + 2 k3 + k4) * dt
     for (let j = 0; j < p; ++j)
       output[outputOffset + j] =
-        input[inputOffset + j] +
-        (dt * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j])) / 6;
+        input[inputOffset + j] + (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j]) * dt6;
   };
 }

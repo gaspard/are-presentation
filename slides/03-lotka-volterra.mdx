@@ -1,42 +1,40 @@
-import { Slider } from "./components/Slider";
+import { LotkaVolterra } from "./components/LotkaVolterra";
 
-### Test sliders
+# Lotka-Volterra (simulation)
 
-<Slider />
+<LotkaVolterra />
+
+Sur la simulation, l'**axe rouge** représente la taille de la population de prédateurs. L'**axe vert** la taille de la population de proies.
+
+Les **équations de Lotka-Volterra**:
+
+$$
+\begin{cases}
+\dot{x}= \alpha x - \beta x y \\
+\dot{y} = \delta x y - \gamma y
+\end{cases}
+$$
+
+où :
+
+- $x$: population de proies
+- $y$: population de prédateurs
+- $\alpha$: taux de croissance naturelle des proies ($x$ augmentent)
+- $\beta$: taux de prédation ($y$ réduisent $x$)
+- $\gamma$: taux de mortalité des prédateurs ($y$ diminuent)
+- $\delta$: taux d’accroissement des prédateurs lié à la consommation de proies ($x$ font augmenter $y$)
 
 ```ts
-const cpoints = points.map(([x, y]) => {
-  const xp = (width * x) / 6;
-  const yp = (height * y) / 6;
-  const dx = position.x - xp;
-  const dy = position.y - yp;
-
-  const k1 = Math.sqrt(dx ** 2 + dy ** 2);
-  if (k1 === 0) {
-    return [width / 2 + xp, height / 2 + yp];
-  }
-  const k = mult / k1 ** pow;
-
-  return [width / 2 + xp + dx * k, height / 2 + yp + dy * k];
-});
+// Calcul des derivées Lotka-Volterra.
+function derivees(input: Float32Array, t: number, output: Float32Array, offset: number) => {
+  const x = input[offset];
+  const y = input[offset + 1];
+  // dx / dt
+  output[offset] = alpha * x - beta * x * y;
+  // dy / dt
+  output[offset + 1] = gamma * x * y - delta * y;
+};
 ```
-
-## Tests maths
-
-Le modèle de base est défini par deux équations différentielles non linéaires :
-
-$$
-\begin{aligned}
-  \frac{dx}{dt} & = \alpha x - \beta xy \quad \text{(croissance des proies avec prédation)} \\
-  \frac{dy}{dt} & = \delta xy - \gamma y \quad \text{(croissance des prédateurs dépendant des proies)}
-\end{aligned}
-$$
-
-Où :
-
-- $x$ est la population des proies.
-- $y$ est la population des prédateurs.
-- $\alpha, \beta, \gamma, \delta$ sont des paramètres positifs.
 
 ## Points d'équilibre
 

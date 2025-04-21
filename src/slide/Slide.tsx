@@ -1,6 +1,7 @@
 import hljs from "highlight.js";
 import glsl from "highlight.js/lib/languages/glsl";
 import python from "highlight.js/lib/languages/python";
+import typescript from "highlight.js/lib/languages/typescript";
 import "highlight.js/styles/night-owl.css";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +11,7 @@ import "./css/typography.css";
 
 hljs.registerLanguage("glsl", glsl);
 hljs.registerLanguage("py", python);
+hljs.registerLanguage("ts", typescript);
 
 export function Slide({ slide }: { slide: Slide }) {
   const navigate = useNavigate();

@@ -5,14 +5,15 @@ import * as THREE from "three";
 import { Cellular, makeCellular, snoise, Vect } from "../functional/cellular";
 import { makeKernel } from "../functional/diffuse";
 import { kutta, ODE } from "../functional/runge-kutta";
-import { Inputs } from "./lib/Input";
+import { SettingsView } from "./lib/SettingsView";
 
-const g = { n: 400, m: 400, p: 2, wrap: true };
-const cellular = makeCellular(
-  g,
-  makeKernel({ dt: 0.0001, f: 0.01 }),
-  snoise(g, [0, 10], [0.002, 0.15])
-);
+const g = { n: 40, m: 40, p: 2, wrap: true };
+const noise = snoise(g, [0, 1], [0.1, 0.02, 0.0002]);
+for (let i = 0; i < noise.length; i++) {
+  noise[i] = Math.max(0, noise[i] ** 4 * 40);
+}
+
+const cellular = makeCellular(g, makeKernel({ dt: 0.0001, f: 0.01 }), noise);
 
 const lotka = tilia({
   setup: {
@@ -24,6 +25,7 @@ const lotka = tilia({
   live: {
     speed: 3.0,
     dt: 0.006,
+    f: 0.1,
     alpha: 0.72,
     beta: 0.02,
     gamma: 0.01,
@@ -42,6 +44,7 @@ const lotkaRange = {
   live: {
     speed: [0.1, 100],
     dt: [0.0001, 0.1, 0.0001],
+    f: [0.0001, 5, 0.0001],
     alpha: [0, 1, 0.01],
     beta: [0, 1, 0.01],
     gamma: [0, 1, 0.01],
@@ -57,9 +60,12 @@ const stepper = {
   step(input: Float32Array, time: number, output: Float32Array) {},
 };
 
-function updateLotka() {
-  const step = kutta({ p: 2, dt: lotka.live.dt }, preyDeriv(lotka.live));
-  stepper.dt = lotka.live.dt;
+function updateLotka(lotka: LotkaSettings) {
+  console.log("UPD");
+  const g = { p: 2, dt: lotka.live.dt, f: lotka.live.f };
+  cellular.step = makeKernel(g);
+  const step = kutta(g, preyDeriv(lotka.live));
+  stepper.dt = g.dt;
   stepper.step = (input: Float32Array, time: number, output: Float32Array) => {
     // p = 2
     const len = input.length / 2;
@@ -69,8 +75,8 @@ function updateLotka() {
   };
 }
 
-observe(lotka, ({ live }) => {
-  updateLotka();
+observe(lotka, (lotka) => {
+  updateLotka(lotka);
 });
 
 export function LotkaTerritory() {
@@ -99,7 +105,7 @@ export function LotkaTerritory() {
           display: "block",
         }}
       />
-      <Inputs branch={lotka.live} range={lotkaRange.live} />
+      <SettingsView settings={lotka.live} range={lotkaRange.live} />
     </>
   );
 }

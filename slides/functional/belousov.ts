@@ -35,13 +35,11 @@ export function makeKernel({ Du, Dv, f, k, dt }: Settings) {
     let lap_u = 0,
       lap_v = 0;
     // Moore neighborhood weights: center 4, sides 1, corners 0.5 (optional)
-    const weights = [0.5, 1, 0.5, 1, 0, 1, 0.5, 1, 0.5];
+    const weights = [0.5, 1, 0.5, 1, -6, 1, 0.5, 1, 0.5];
     for (let i = 0; i < 9; i++) {
       lap_u += input[i][0] * weights[i];
       lap_v += input[i][1] * weights[i];
     }
-    lap_u -= u * 6; // Subtract center weight sum
-    lap_v -= v * 6;
 
     // Reaction-diffusion equations (Gray-Scott style, BZ-like)
     // du/dt = Du * Laplacian(u) - u*v*v + f*(1-u)

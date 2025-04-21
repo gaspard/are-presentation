@@ -116,7 +116,6 @@ export function makeCellular(
   init: Float32Array = snoise(grid),
   e: Float32Array = new Float32Array(grid.p)
 ): Cellular {
-  console.log(init);
   const g = [makeGrid(grid, init, e), makeGrid(grid, init, e)];
   const cellular: Cellular = {
     grid,

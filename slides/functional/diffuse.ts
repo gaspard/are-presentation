@@ -14,7 +14,7 @@ const defaultSettings = {
   f: 0.035, // Feed rate
 };
 
-export function makeKernel({ dt }: Settings) {
+export function makeKernel({ dt, f }: Settings) {
   return function kernel(
     input: Float32Array[],
     t: number,
@@ -29,19 +29,14 @@ export function makeKernel({ dt }: Settings) {
     let lap_u = 0,
       lap_v = 0;
     // Moore neighborhood weights: center 4, sides 1, corners 0.5 (optional)
-    const weights = [0.5, 1, 0.5, 1, 0, 1, 0.5, 1, 0.5];
+    const weights = [0.5, 1, 0.5, 1, -6, 1, 0.5, 1, 0.5];
     for (let i = 0; i < 9; i++) {
       lap_u += input[i][0] * weights[i];
       lap_v += input[i][1] * weights[i];
     }
-    lap_u -= u * 6; // Subtract center weight sum
-    lap_v -= v * 6;
 
-    const du = lap_u;
-    const dv = lap_v;
-
-    output[0] = u + du * 100 * dt;
-    output[1] = v + dv * 100 * dt;
+    output[0] = u + f * lap_u * dt;
+    output[1] = v + f * lap_v * dt;
   };
 }
 

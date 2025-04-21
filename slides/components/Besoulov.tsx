@@ -4,14 +4,14 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { makeKernel, randomBelousov } from "../functional/belousov";
 import { Cellular } from "../functional/cellular";
-import { Inputs } from "./lib/Input";
+import { SettingsView } from "./lib/SettingsView";
 
 const cellular = randomBelousov(400, 400);
 
 const settings = tilia({
   live: {
     Du: 0.49, // Diffusion rate for u (activator)
-    Dv: 0.08, // Diffusion rate for v (inhibitor)
+    Dv: 0.03, // Diffusion rate for v (inhibitor)
     f: 0.035, // Feed rate
     k: 0.06, // Kill rate
     dt: 0.1, // Time step
@@ -65,7 +65,7 @@ export function Besoulov() {
           display: "block",
         }}
       />
-      <Inputs branch={settings.live} range={range.live} />
+      <SettingsView settings={settings.live} range={range.live} />
     </>
   );
 }

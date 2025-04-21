@@ -1,0 +1,22 @@
+import { Slider } from "./components/Slider";
+
+# Test d'interactivité
+
+<Slider />
+
+```ts
+const cpoints = points.map(([x, y]) => {
+  const xp = (width * x) / 6;
+  const yp = (height * y) / 6;
+  const dx = position.x - xp;
+  const dy = position.y - yp;
+
+  const k1 = Math.sqrt(dx ** 2 + dy ** 2);
+  if (k1 === 0) {
+    return [width / 2 + xp, height / 2 + yp];
+  }
+  const k = mult / k1 ** pow;
+
+  return [width / 2 + xp + dx * k, height / 2 + yp + dy * k];
+});
+```
