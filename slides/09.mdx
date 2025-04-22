@@ -1,1 +1,16 @@
+```ts
+// Calcul des derivées Lotka-Volterra.
+function derivees(input: Float32Array, t: number, output: Float32Array, offset: number) => {
+  const x = input[offset];
+  const y = input[offset + 1];
+  const z = input[offset + 2];
+  // dx / dt
+  output[offset] = alpha * x * (1 - beta * x) - delta * x * y - gamma * x * z;
+  // dy / dt
+  output[offset + 1] = -epsilon * y + lambda * delta * x * y - mu * y * z ;
+  // dz / dt
+  output[offset + 2] = -tau * z + phi * epsilon * x * z + omega * mu * y * z
+};
+```
+
 
