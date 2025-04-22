@@ -1,17 +1,17 @@
 import { useTilia } from "@tilia/react";
 import React, { useEffect, useRef } from "react";
-import { addPoints, orthographicScene } from "./3D";
+import { addGrid, addPoints, orthographicScene } from "./3D";
 import { SettingsView } from "./SettingsView";
 import { Settings } from "./settings";
 
-export function PointsExperiment({
+export function GridExperiment({
   step,
   settings,
-  scale = 1,
-  translate = { x: 0, y: 0 },
+  translate,
 }: {
   step: (time: number) => Float32Array;
   settings: Settings;
+
   scale?: number;
   translate?: { x: number; y: number };
 }) {
@@ -21,7 +21,7 @@ export function PointsExperiment({
   useEffect(() => {
     if (!domElem.current) return;
     const scene = orthographicScene(domElem.current, translate);
-    const update = addPoints(scene.scene, scale);
+    const update = addGrid(scene.scene, scale);
     scene.start((time) => {
       const data = step(time);
       update(time, data);

@@ -37,8 +37,8 @@ export interface Cellular {
   // operation
   t: number;
   swap: () => void;
-  next: (time: number) => Grid;
-  step: (input: Float32Array[], t: number, output: Float32Array) => void;
+  step: (time: number) => Grid;
+  kernel: (input: Float32Array[], t: number, output: Float32Array) => void;
 }
 
 // Returns n x m times 9 neighbors (on set of neighbors for each cell).
@@ -112,7 +112,7 @@ export function makeGrid(
 
 export function makeCellular(
   grid: GridParam,
-  step: Cellular["step"],
+  step: Cellular["kernel"],
   init: Float32Array = snoise(grid),
   e: Float32Array = new Float32Array(grid.p)
 ): Cellular {
@@ -124,9 +124,9 @@ export function makeCellular(
     output: g[0],
     t: 0,
     i: 0,
-    step,
+    kernel: step,
     swap: () => {},
-    next: () => g[0],
+    step: () => g[0],
   };
 
   cellular.swap = () => {
@@ -135,11 +135,11 @@ export function makeCellular(
     cellular.output = g[cellular.i];
   };
 
-  cellular.next = (t: number) => {
+  cellular.step = (t: number) => {
     cellular.swap();
-    const { step, input, output } = cellular;
+    const { kernel, input, output } = cellular;
     cellular.t = t;
-    loop(input.input, t, output.output, step);
+    loop(input.input, t, output.output, kernel);
     return output;
   };
 
@@ -150,11 +150,11 @@ function loop(
   input: Float32Array[][],
   t: number,
   output: Float32Array[],
-  step: Cellular["step"]
+  kernel: Cellular["kernel"]
 ) {
   const len = output.length;
   for (let i = 0; i < len; ++i) {
-    step(input[i], t, output[i]);
+    kernel(input[i], t, output[i]);
   }
 }
 
@@ -186,12 +186,18 @@ function fillNoiseArray(
 export function snoise(
   g: { n: number; m: number; p: number },
   range = [0, 1.0],
-  scales = [0.1, 0.02, 0.008]
+  scales?: number[]
 ): Float32Array {
+  const sc = scales || [
+    1.0 * Math.random(),
+    0.1 * Math.random(),
+    0.01 * Math.random(),
+    0.001 * Math.random(),
+  ];
   const arr = new Float32Array(g.n * g.m * g.p);
 
   for (let i = 0; i < g.p; ++i) {
-    for (const s of scales) {
+    for (const s of sc) {
       fillNoiseArray(arr, g, i, s);
     }
     scale(arr, range);

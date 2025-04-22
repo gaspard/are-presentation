@@ -1,67 +1,60 @@
-import { observe, tilia } from "@tilia/react";
-import * as d3 from "d3";
 import * as React from "react";
 import { makeStepper, ODE, Vect } from "../functional/runge-kutta";
-import { PointsExperiment } from "./lib/PointsExperiment";
+import { Experiment } from "./lib/Experiment";
+import { pointsExperiment } from "./lib/experiments";
 import { s, settingsValues } from "./lib/settings";
 
-const settings = tilia({
-  steps: s.uint("trace", "iter.", 6000, (v) => v > 1),
-  dt: s.float("dt", "$s$", 0.01, (v) => v > 0),
-  speed: s.float("vitesse", "facteur", 3.0, (v) => v > 0),
-  seed: s.seed("reset", ""),
-  break: s.break(),
-  k: s.float("k", "$kg/s^2$", 0.01, (v) => v > 0),
-  m: s.float("m", "$kg$", 0.01, (v) => v > 0),
-  break2: s.break(),
-  rungeKutta: s.enum("Runge-Kutta", ["off", "on"]),
+const experiment = pointsExperiment({
+  scale: 1 / 2,
+  settings: {
+    n: s.uint("trace", "iter.", 6000, (v) => v > 1),
+    dt: s.float("dt", "$s$", 0.01, (v) => v > 0),
+    speed: s.float("vitesse", "facteur", 3.0, (v) => v > 0),
+    seed: s.seed("reset"),
+    break: s.break(),
+    k: s.float("k", "$kg/s^2$", 0.01, (v) => v > 0),
+    m: s.float("m", "$kg$", 0.01, (v) => v > 0),
+    break2: s.break(),
+    rungeKutta: s.enum("Runge-Kutta", ["off", "on"]),
+  },
+  translate: { x: 0, y: 0 },
+  type: "points",
+  make(settings) {
+    const { k, m, n, dt, speed, rungeKutta } = settingsValues(settings);
+
+    const ode: ODE = {
+      dt,
+      speed,
+      steps: n,
+      rungeKutta: rungeKutta === 1,
+
+      // We need two dimensions for second order ode: one for x and one for v.
+      // MUST BE 3 for THREE.js 3D position.
+      dimension: 3,
+      // Initial position 1, velocity 0, z = 0.
+      startValue: [1, 0, 0],
+      // Spring: a = - (k/m) x
+      // dx = v * dt
+      // dv = - (k/m) x dt
+      deriv: (input: Vect, t: number, output: Vect, offset: number) => {
+        const x = input[offset];
+        const v = input[offset + 1];
+        // dx / dt = v
+        output[offset] = v;
+        // dv / dt = - (k/m) x
+        output[offset + 1] = -(k / m) * x;
+      },
+    };
+
+    const stepper = makeStepper(ode);
+
+    function step(time: number) {
+      stepper.step(time);
+      return stepper.data;
+    }
+
+    return step;
+  },
 });
 
-let stepper = makeStepper(spring(settings));
-
-observe(settings, (s) => {
-  stepper = makeStepper(spring(s));
-});
-
-function step(time: number) {
-  stepper.step(time);
-  return stepper.data;
-}
-
-export const RungeKutta = () => (
-  <PointsExperiment settings={settings} step={step} scale={1 / 2} />
-);
-
-function spring(s: typeof settings): ODE {
-  const { k, m, steps, dt, speed, rungeKutta } = settingsValues(s);
-
-  const ode: ODE = {
-    // Number of steps in the output (more steps => finer computations).
-    dt,
-    speed,
-    // Duration for the steps (in seconds)
-    steps,
-
-    // Runge-Kutta
-    rungeKutta: rungeKutta === 1,
-
-    // Number of parameters in the equation (without t)
-    // We need two dimensions for second order ode: one for
-    // x and one for x'
-    dimension: 3,
-    // Must be an array of "dimension" numbers
-    startValue: [1, 0, 0], // MUST BE 3 for THREE.js 3D position
-    // Spring: a = - (k/m) x
-    // dx = v * dt
-    // dv = - (k/m) x dt
-    deriv: (input: Vect, t: number, output: Vect, offset: number) => {
-      const x = input[offset];
-      const v = input[offset + 1];
-      // dx_{n+1} / dt = v_{n}
-      output[0] = v;
-      // dv_{n+1} / dt = - (k/m) x_{n}
-      output[1] = -(k / m) * x;
-    },
-  };
-  return ode;
-}
+export const RungeKutta = () => <Experiment experiment={experiment} />;

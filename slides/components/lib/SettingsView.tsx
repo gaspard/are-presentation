@@ -207,7 +207,7 @@ function Seed(props: { setting: SeedSetting }) {
 function Break(props: { setting: BreakSetting }) {
   const s = useTilia(props.setting);
   return (
-    <span className="value font-bold text-md cursor-pointer col-span-3">
+    <span className="value font-bold text-md col-span-3">
       <Katex text={s.name} />
     </span>
   );

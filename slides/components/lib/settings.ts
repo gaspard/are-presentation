@@ -40,26 +40,26 @@ export type Setting =
   | UintSetting
   | BreakSetting;
 
-export type Settings = Record<string, Setting>;
+export type Settings<T extends object = {}> = Record<string, Setting> & T;
 
 export function isBoolean(s: Setting): s is EnumSetting {
-  return (s as EnumSetting).type === "enum";
+  return s.type === "enum";
 }
 
 export function isFloat(s: Setting): s is FloatSetting {
-  return (s as FloatSetting).type === "float";
+  return s.type === "float";
 }
 
 export function isUint(s: Setting): s is UintSetting {
-  return (s as UintSetting).type === "uint";
+  return s.type === "uint";
 }
 
 export function isSeed(s: Setting): s is SeedSetting {
-  return (s as SeedSetting).type === "seed";
+  return s.type === "seed";
 }
 
 export function isBreak(s: Setting): s is BreakSetting {
-  return (s as BreakSetting).type === "break";
+  return s.type === "break";
 }
 
 export function hasUnits(s: Setting): s is Setting & { units: string } {
