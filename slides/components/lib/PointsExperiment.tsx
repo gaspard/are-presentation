@@ -20,7 +20,7 @@ export function PointsExperiment({
 
   useEffect(() => {
     if (!domElem.current) return;
-    const scene = orthographicScene(domElem.current, translate);
+    const scene = orthographicScene(domElem.current, translate, true);
     const update = addPoints(scene.scene, scale);
     scene.start((time) => {
       const data = step(time);

@@ -5,7 +5,7 @@ import { pointsExperiment } from "./lib/experiments";
 import { s, settingsValues } from "./lib/settings";
 
 const experiment = pointsExperiment({
-  scale: 1 / 60,
+  scale: 1 / 30,
   translate: { x: -0.9, y: -0.8 },
   settings: {
     n: s.uint("trace", "iter.", 940, (v) => v > 1),
@@ -33,9 +33,23 @@ const experiment = pointsExperiment({
   type: "points",
   make(settings) {
     const {
-      n, dt, speed, rungeKutta,
-      a, b, c, d, e, f, g, h, i, j,
-      prey, predator, omnivore
+      n,
+      dt,
+      speed,
+      rungeKutta,
+      a,
+      b,
+      c,
+      d,
+      e,
+      f,
+      g,
+      h,
+      i,
+      j,
+      prey,
+      predator,
+      omnivore,
     } = settingsValues(settings);
 
     const ode: ODE = {
@@ -69,4 +83,6 @@ const experiment = pointsExperiment({
   },
 });
 
-export const LotkaVolterraOmnivore = () => <Experiment experiment={experiment} />;
+export const LotkaVolterraOmnivore = () => (
+  <Experiment experiment={experiment} />
+);
