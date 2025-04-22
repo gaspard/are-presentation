@@ -79,7 +79,7 @@ function Float({ setting }: { setting: FloatSetting }) {
   const [dragging, setDragging] = useState(false);
   return (
     <span
-      className={`value font-bold text-md cursor-move${
+      className={`value font-bold text-md cursor-move ${
         dragging ? " text-pink-400" : ""
       }`}
       onMouseDown={(e) => {
@@ -115,7 +115,13 @@ function Float({ setting }: { setting: FloatSetting }) {
         window.addEventListener("mouseup", mouseUp);
       }}
     >
-      {formatFloat(s.value)}
+      {dragging ? (
+        <span className="p-1 bg-research-200 text-research-800 rounded-sm font-mono">
+          {formatFloat(s.value, 2)}
+        </span>
+      ) : (
+        formatFloat(s.value)
+      )}
     </span>
   );
 }

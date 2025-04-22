@@ -5,11 +5,13 @@ import { pointsExperiment } from "./lib/experiments";
 import { s, settingsValues } from "./lib/settings";
 
 const experiment = pointsExperiment({
-  scale: 1 / 60,
-  translate: { x: -0.9, y: -0.8 },
+  view: {
+    scale: 1 / 60,
+    scene: { position: { x: -0.9, y: -0.8 } },
+  },
   settings: {
-    n: s.uint("trace", "iter.", 940, (v) => v > 1),
-    dt: s.float("dt", "$s$", 0.02, (v) => v > 0),
+    n: s.uint("trace", "iter.", 810, (v) => v > 1),
+    dt: s.float("dt", "$s$", 0.007, (v) => v > 0),
     speed: s.float("vitesse", "facteur", 3.0, (v) => v > 0),
     seed: s.seed("reset"),
     break: s.break(),

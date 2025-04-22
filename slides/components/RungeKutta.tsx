@@ -5,7 +5,9 @@ import { pointsExperiment } from "./lib/experiments";
 import { s, settingsValues } from "./lib/settings";
 
 const experiment = pointsExperiment({
-  scale: 1 / 2,
+  view: {
+    scale: 1 / 2,
+  },
   settings: {
     n: s.uint("trace", "iter.", 6000, (v) => v > 1),
     dt: s.float("dt", "$s$", 0.01, (v) => v > 0),

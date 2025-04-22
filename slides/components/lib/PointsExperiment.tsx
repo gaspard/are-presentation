@@ -2,26 +2,23 @@ import { useTilia } from "@tilia/react";
 import React, { useEffect, useRef } from "react";
 import { addPoints, orthographicScene } from "./3D";
 import { SettingsView } from "./SettingsView";
-import { Settings } from "./settings";
+import { PointsExperiment } from "./experiments";
 
 export function PointsExperiment({
+  experiment,
   step,
-  settings,
-  scale = 1,
-  translate = { x: 0, y: 0 },
 }: {
+  experiment: PointsExperiment;
   step: (time: number) => Float32Array;
-  settings: Settings;
-  scale?: number;
-  translate?: { x: number; y: number };
 }) {
+  const { settings } = experiment;
   const seed = useTilia(settings).seed ?? { value: 0 };
   const domElem = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!domElem.current) return;
-    const scene = orthographicScene(domElem.current, translate, true);
-    const update = addPoints(scene.scene, scale);
+    const scene = orthographicScene(domElem.current, experiment);
+    const update = addPoints(scene.scene, experiment);
     scene.start((time) => {
       const data = step(time);
       update(time, data);

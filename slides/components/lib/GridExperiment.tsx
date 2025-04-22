@@ -1,27 +1,24 @@
 import { useTilia } from "@tilia/react";
 import React, { useEffect, useRef } from "react";
-import { addGrid, addPoints, orthographicScene } from "./3D";
+import { addGrid, orthographicScene } from "./3D";
 import { SettingsView } from "./SettingsView";
-import { Settings } from "./settings";
+import { GridExperiment } from "./experiments";
 
 export function GridExperiment({
   step,
-  settings,
-  translate,
+  experiment,
 }: {
+  experiment: GridExperiment;
   step: (time: number) => Float32Array;
-  settings: Settings;
-
-  scale?: number;
-  translate?: { x: number; y: number };
 }) {
+  const { settings } = experiment;
   const seed = useTilia(settings).seed ?? { value: 0 };
   const domElem = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!domElem.current) return;
-    const scene = orthographicScene(domElem.current, translate);
-    const update = addGrid(scene.scene, scale);
+    const scene = orthographicScene(domElem.current, experiment);
+    const update = addGrid(scene.scene, experiment);
     scene.start((time) => {
       const data = step(time);
       update(time, data);

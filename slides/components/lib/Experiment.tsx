@@ -65,7 +65,7 @@ function gridExperiment(
   update: { step: (time: number) => Float32Array },
   element: HTMLDivElement
 ) {
-  const scene = orthographicScene(element, experiment.translate, false);
+  const scene = orthographicScene(element, experiment);
   const gridUpdate = addGrid(scene.scene, experiment);
   scene.start((time) => {
     const data = update.step(time);
@@ -81,7 +81,7 @@ function pointsExperiment(
   update: { step: (time: number) => Float32Array },
   element: HTMLDivElement
 ) {
-  const scene = orthographicScene(element, experiment.translate, true);
+  const scene = orthographicScene(element, experiment);
   const gridUpdate = addPoints(scene.scene, experiment);
   scene.start((time) => {
     const data = update.step(time);

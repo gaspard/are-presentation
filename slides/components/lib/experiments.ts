@@ -1,3 +1,4 @@
+import { View } from "./3D";
 import { Settings, UintSetting } from "./settings";
 
 type GridSettings = Settings;
@@ -13,8 +14,7 @@ export interface GridExperiment<
   n: number;
   // number of columns
   m: number;
-  scale: number;
-  translate: { x: number; y: number };
+  view: View;
   settings: T;
   init?: (experiment: GridExperiment<T>) => K;
   make: (settings: T, cache: K) => (time: number) => Float32Array;
@@ -31,8 +31,7 @@ export interface PointsExperiment<
   K = any
 > {
   type: "points";
-  scale: number;
-  translate: { x: number; y: number };
+  view: View;
   settings: T;
   init?: (experiment: PointsExperiment<T>) => K;
   make: (settings: T, cache: K) => (time: number) => Float32Array;

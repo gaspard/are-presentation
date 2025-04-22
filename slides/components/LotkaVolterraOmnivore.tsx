@@ -5,10 +5,16 @@ import { pointsExperiment } from "./lib/experiments";
 import { s, settingsValues } from "./lib/settings";
 
 const experiment = pointsExperiment({
-  scale: 1 / 30,
-  translate: { x: -0.9, y: -0.8 },
+  view: {
+    scale: 1 / 20,
+    camera: {
+      position: { x: -7, y: 3, z: 1 },
+      lookAt: { x: 0, y: -0.2, z: 0.2 },
+    },
+    scene: { position: { x: -1, y: -0.6, z: -0.1 } },
+  },
   settings: {
-    n: s.uint("trace", "iter.", 940, (v) => v > 1),
+    n: s.uint("trace", "iter.", 4000, (v) => v > 1),
     dt: s.float("dt", "$s$", 0.02, (v) => v > 0),
     speed: s.float("vitesse", "facteur", 3.0, (v) => v > 0),
     seed: s.seed("reset"),
@@ -18,7 +24,7 @@ const experiment = pointsExperiment({
     omnivore: s.float("omnivore", "qté", 10, (v) => v > 0),
     break2: s.break(),
     a: s.float("$a$", "croiss. proie", 0.58, (v) => v > 0),
-    b: s.float("$b$", "compét. proie", 0.01, (v) => v >= 0),
+    b: s.float("$b$", "compét. proie", 0.00647, (v) => v >= 0),
     c: s.float("$c$", "cons. x→y", 0.02, (v) => v > 0),
     d: s.float("$d$", "cons. x→z", 0.01, (v) => v > 0),
     e: s.float("$e$", "mort. y", 0.3, (v) => v > 0),

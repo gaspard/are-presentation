@@ -1,13 +1,28 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { PointsExperiment } from "./experiment";
+import { deepMerge, DeepPartial } from "./deepMerge";
+import { ExperimentType, PointsExperiment } from "./experiments";
+
+const defaultView = {
+  scale: 1,
+  scene: {
+    position: { x: 0, y: 0, z: 0 },
+  },
+  camera: {
+    lookAt: { x: 0, y: 0, z: 0 },
+    position: { x: 0, y: 0, z: 5 },
+  },
+  axes: true,
+};
+
+export type View = DeepPartial<typeof defaultView>;
 
 export function orthographicScene(
   elem: HTMLDivElement,
-  translate?: { x: number; y: number },
-  axes: boolean
+  experiment: ExperimentType
 ) {
   const scene = new THREE.Scene();
+  const view = deepMerge(defaultView, experiment.view);
 
   const width = elem.clientWidth;
   const height = width;
@@ -22,17 +37,26 @@ export function orthographicScene(
 
   // Orbit controls
   const controls = new OrbitControls(camera, renderer.domElement);
-  camera.position.set(0, 0, 5);
-  camera.lookAt(0, 0, 0);
+  camera.position.set(
+    view.camera.position.x,
+    view.camera.position.y,
+    view.camera.position.z
+  );
+  camera.lookAt(
+    view.camera.lookAt.x,
+    view.camera.lookAt.y,
+    view.camera.lookAt.z
+  );
   controls.update();
 
-  if (translate) {
-    scene.position.x = translate.x;
-    scene.position.y = translate.y;
-  }
+  scene.position.set(
+    view.scene.position.x,
+    view.scene.position.y,
+    view.scene.position.z
+  );
 
   // Add axes for orientation
-  if (axes) {
+  if (view.axes) {
     const axesHelper = new THREE.AxesHelper(0.5);
     scene.add(axesHelper);
   }
@@ -124,13 +148,14 @@ export function cleanupThreejs(animation: {
 
 export function addPoints(scene: THREE.Scene, experiment: PointsExperiment) {
   const geometry = new THREE.BufferGeometry();
-  const scale = experiment.scale || 1;
+  const view = deepMerge(defaultView, experiment.view);
 
   const material = new THREE.PointsMaterial({
     color: 0x44ffff,
     size: 4,
     opacity: 0.45,
     transparent: true,
+    depthWrite: false,
   });
   material.onBeforeCompile = (shader) => {
     shader.fragmentShader = shader.fragmentShader.replace(
@@ -144,7 +169,7 @@ export function addPoints(scene: THREE.Scene, experiment: PointsExperiment) {
   };
 
   const points = new THREE.Points(geometry, material);
-  points.scale.set(scale, scale, scale);
+  points.scale.set(view.scale, view.scale, view.scale);
   scene.add(points);
 
   function update(time: number, data: Float32Array) {
@@ -156,16 +181,16 @@ export function addPoints(scene: THREE.Scene, experiment: PointsExperiment) {
 
 export function addGrid(
   scene: THREE.Scene,
-  grid: { n: number; m: number; p: number },
-  scale: number = 1
+  experiment: { n: number; m: number; p: number; view: View }
 ) {
+  // const view = deepMerge(defaultView, experiment.view);
   const geometry = new THREE.PlaneGeometry(2, 2);
-  const height = grid.n;
-  const width = grid.m;
+  const height = experiment.n;
+  const width = experiment.m;
 
-  if (![1, 2, 4].includes(grid.p)) {
+  if (![1, 2, 4].includes(experiment.p)) {
     throw new Error(
-      `addGrid only supports dimensions for pixel of 1, 2, or 4. Found grd.p = ${grid.p}`
+      `addGrid only supports dimensions for pixel of 1, 2, or 4. Found grd.p = ${experiment.p}`
     );
   }
 
@@ -173,9 +198,9 @@ export function addGrid(
     null,
     width,
     height,
-    grid.p === 1
+    experiment.p === 1
       ? THREE.RedFormat
-      : grid.p === 2
+      : experiment.p === 2
       ? THREE.RGFormat
       : // grid.p === 4
         THREE.RGBAFormat,

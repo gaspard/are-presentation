@@ -5,8 +5,12 @@ import { gridExperiment } from "./lib/experiments";
 import { s, settingsValues } from "./lib/settings";
 
 const experiment = gridExperiment({
-  scale: 1 / 60,
-  translate: { x: -0.9, y: -0.8 },
+  view: {
+    scale: 1 / 60,
+    scene: {
+      position: { x: -0.9, y: -0.8 },
+    },
+  },
   p: 2, // RG
   m: 400,
   n: 400,

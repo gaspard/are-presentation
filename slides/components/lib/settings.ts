@@ -157,13 +157,13 @@ export function scaler(v: number, dist: number) {
   return v + x ** 5 / (1 + x ** 2);
 }
 
-export function formatFloat(v: number): string {
+export function formatFloat(v: number, plus = 0): string {
   if (v === 0) return "0.00";
   const m = -magnitude(v);
 
   if (m >= 0) {
-    return v.toFixed(m + 3);
+    return v.toFixed(m + 3 + plus);
   } else {
-    return v.toFixed(2);
+    return v.toFixed(2 + plus);
   }
 }
