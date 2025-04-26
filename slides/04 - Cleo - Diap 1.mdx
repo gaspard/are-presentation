@@ -1,13 +1,31 @@
-# Lotka-Volterra
+# Modèle de Lotka-Volterra
+
 ## Interprétation intuitive
 
-**Les équations**
+### Les équations
 
-$$ 
+Les équations du modèle de Lotka-Volterra sont données par :
+
+$$
 \begin{aligned}
     \begin{cases}
-        u'(t) = a u(t) v(t) - b v(t) u(t)\\
-        v'(t) = -v(t)c + du(t)v(t) 
+        u'(t) = a u(t) v(t) - b v(t) u(t) \\
+        v'(t) = -v(t) c + d u(t) v(t)
     \end{cases}
 \end{aligned}
 $$
+
+où $ a $, $ b $, $ c $ et $ d $ sont des réels positifs.
+
+### Interprétation des termes
+
+- $ u(t) $ représente la population des proies à l'instant $ t $.
+- $ v(t) $ représente la population des prédateurs à l'instant $ t $.
+- $ a $ est le taux de reproduction des proies en présence des prédateurs.
+- $ b $ est le taux de prédation des prédateurs sur les proies.
+- $ c $ est le taux de mortalité des prédateurs en l'absence de proies.
+- $ d $ est le taux de reproduction des prédateurs en présence des proies.
+
+### Dynamique du modèle
+
+Le modèle de Lotka-Volterra décrit l'interaction entre deux espèces, les proies et les prédateurs, et montre comment leurs populations évoluent au fil du temps. Les équations différentielles ci-dessus capturent les dynamiques de croissance et de décroissance des populations en fonction des interactions entre les deux espèces.
