@@ -89,6 +89,6 @@ const experiment = pointsExperiment({
   },
 });
 
-export const LotkaVolterraOmnivoreChaos = () => (
+export const LotkaVolterraOmnivoreStable = () => (
   <Experiment experiment={experiment} />
 );
