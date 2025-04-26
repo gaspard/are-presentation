@@ -1,0 +1,54 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import solve_ivp
+
+# ---- Modèle Lotka-Volterra 3 espèces ----
+def LV_omnivore(t, N, B, D1, D2, a11, a12, a13, a21, a23, a31, a32):
+    N1, N2, N3 = N
+    dN1_dt = N1 * (B - a11*N1 - a12*N2 - a13*N3)
+    dN2_dt = N2 * (-D1 + a21*N1 - a23*N3)
+    dN3_dt = N3 * (-D2 + a31*N1 + a32*N2)
+    return [dN1_dt, dN2_dt, dN3_dt]
+
+# ---- Paramètres fixes ----
+B = 2.0
+D1 = 1.0
+D2 = 1.2
+a11 = 0.5
+a12 = 0.8
+a13 = 0.4
+a21 = 0.9
+a23 = 0.5
+a31 = 0.3
+
+# Conditions initiales
+N0 = [1.0, 0.5, 0.2]
+
+# Temps long pour atteindre attracteur
+t_span = (0, 100)
+t_eval = np.linspace(t_span[0], t_span[1], 1000)
+
+# ---- Explorer a32 ----
+a32_values = np.linspace(0.1, 1.5, 100)
+N1_final = []
+N2_final = []
+N3_final = []
+
+for a32 in a32_values:
+    sol = solve_ivp(LV_omnivore, t_span, N0, args=(B, D1, D2, a11, a12, a13, a21, a23, a31, a32), t_eval=t_eval)
+    # Prendre la moyenne sur les derniers temps pour éviter des oscillations
+    N1_final.append(np.mean(sol.y[0][-100:]))
+    N2_final.append(np.mean(sol.y[1][-100:]))
+    N3_final.append(np.mean(sol.y[2][-100:]))
+
+# ---- Plot Bifurcation ----
+plt.figure(figsize=(10,6))
+plt.plot(a32_values, N1_final, label='Ressource (N1)', color='green')
+plt.plot(a32_values, N2_final, label='Herbivore (N2)', color='blue')
+plt.plot(a32_values, N3_final, label='Omnivore (N3)', color='red')
+plt.xlabel('Paramètre a32')
+plt.ylabel('Population finale moyenne')
+plt.title('Diagramme de bifurcation - Effet de a32')
+plt.legend()
+plt.grid()
+plt.show()
