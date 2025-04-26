@@ -1,40 +1,37 @@
 import { LotkaVolterraOmnivore } from "./components/LotkaVolterraOmnivore";
 
-## Equations
 
-<LotkaVolterraOmnivore />
 
-# Modèle Lotka–Volterra à Trois Espèces avec Omnivorie
+On utilise les équations de Lotka-Volterra pour modéliser les taux de croissance des populations, en fonction de leurs interactions.
 
-On modélise trois populations biologiques :
-
-- \( x(t) \) : Ressource (ex. plante)
-- \( y(t) \) : Consommateur intermédiaire (ex. herbivore)
-- \( z(t) \) : Omnivore (ex. super-prédateur)
-
-Le système d’équations différentielles est :
+## Forme générale :
 
 $$
-\begin{cases}
-\displaystyle \frac{dx}{dt} = \alpha x (1 - \beta x) - \delta x y - \gamma x z \\\\
-\displaystyle \frac{dy}{dt} = -\epsilon y + \lambda \delta x y - \mu y z \\\\
-\displaystyle \frac{dz}{dt} = -\tau z + \phi \epsilon x z + \omega \mu y z
-\end{cases}
+\frac{dN_1}{dt} = N_1 \left( B - a_{11} N_1 - a_{12} N_2 - a_{13} N_3 \right)
+$$
+
+$$
+\frac{dN_2}{dt} = N_2 \left( -D_1 + a_{21} N_1 - a_{23} N_3 \right)
+$$
+
+$$
+\frac{dN_3}{dt} = N_3 \left( -D_2 + a_{31} N_1 + a_{32} N_2 \right)
 $$
 
 ---
 
-## Signification des paramètres
+## Où :
 
-| Paramètre        | Signification                                        |
-|------------------|------------------------------------------------------|
-| $\alpha$          | Taux de croissance de la ressource $x$               |
-| $\beta$           | Compétition intraspécifique de $x$                   |
-| $\delta$          | Taux de consommation de $x$ par $y$                  |
-| $\gamma$          | Taux de consommation de $x$ par $z$ (omnivorie)       |
-| $\epsilon$        | Taux de mortalité naturelle de $y$                   |
-| $\lambda$         | Rendement de $y$ consommant $x$                      |
-| $\mu$             | Taux de prédation de $y$ par $z$                     |
-| $\tau$            | Taux de mortalité naturelle de $z$                   |
-| $\phi$            | Rendement de $z$ consommant $x$                      |
-| $\omega$          | Rendement de $z$ consommant $y$         
+- $N_1$ = ressource (plante)
+- $N_2$ = herbivore (prédateur intermédiaire)
+- $N_3$ = omnivore (prédateur supérieur)
+- $B, D_1, D_2$ = taux de croissance / mortalité
+- $a_{ij}$ = force d'interaction entre les espèces $i$ et $j$
+
+---
+
+## Interprétation :
+
+- La ressource $N_1$ croît avec un taux $B$, mais est limitée par elle-même et consommée par $N_2$ et $N_3$.
+- L'herbivore $N_2$ meurt naturellement ($D_1$) mais se nourrit de $N_1$ et est prédaté par $N_3$.
+- L'omnivore $N_3$ meurt naturellement ($D_2$) mais se nourrit à la fois de $N_1$ et de $N_2$.
