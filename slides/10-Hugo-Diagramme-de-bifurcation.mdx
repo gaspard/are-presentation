@@ -1,16 +1,23 @@
+```py
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
+```
 
 # ---- Modèle Lotka-Volterra 3 espèces ----
+
+```py
 def LV_omnivore(t, N, B, D1, D2, a11, a12, a13, a21, a23, a31, a32):
     N1, N2, N3 = N
     dN1_dt = N1 * (B - a11*N1 - a12*N2 - a13*N3)
     dN2_dt = N2 * (-D1 + a21*N1 - a23*N3)
     dN3_dt = N3 * (-D2 + a31*N1 + a32*N2)
     return [dN1_dt, dN2_dt, dN3_dt]
+```
 
 # ---- Paramètres fixes ----
+
+```py
 B = 2.0
 D1 = 1.0
 D2 = 1.2
@@ -20,8 +27,11 @@ a13 = 0.4
 a21 = 0.9
 a23 = 0.5
 a31 = 0.3
+```
 
 # Conditions initiales
+
+```py
 N0 = [1.0, 0.5, 0.2]
 
 # Temps long pour atteindre attracteur
@@ -52,3 +62,4 @@ plt.title('Diagramme de bifurcation - Effet de a32')
 plt.legend()
 plt.grid()
 plt.show()
+```
