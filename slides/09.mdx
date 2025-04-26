@@ -1,18 +1,1 @@
-import { LotkaVolterra } from "./components/LotkaVolterraOmnivore";
-
-```ts
-// Calcul des derivées Lotka-Volterra.
-function derivees(input: Float32Array, t: number, output: Float32Array, offset: number) => {
-  const x = input[offset];
-  const y = input[offset + 1];
-  const z = input[offset + 2];
-  // dx / dt
-  output[offset] = a * x * (1 - b * x) - c * x * y - d * x * z;
-  // dy / dt
-  output[offset + 1] = e * y + f * delta * x * y - g * y * z ;
-  // dz / dt
-  output[offset + 2] = h * z + i * e * x * z + j * g * y * z
-};
-```
-
-
+import { LotkaVolterraOmnivoreChaos } from "./components/LotkaVolterraOmnivoreChaos";
