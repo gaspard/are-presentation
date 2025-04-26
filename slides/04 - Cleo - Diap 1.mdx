@@ -39,7 +39,6 @@ $$
         grid=major,
         grid style={dashed}
     ]
-        % Plot the Gaussian function
         \addplot[
             domain=-3:3,
             samples=100,
@@ -54,7 +53,6 @@ $$
             }
         ] {exp(-x^2)};
 
-        % Add arrows for concavity and convexity
         \addplot[
             domain=-3:-1,
             samples=10,
@@ -101,4 +99,3 @@ $$
 $$
 
 Ce code LaTeX trace une gaussienne avec des flèches indiquant la concavité et la convexité. Les flèches sont orientées vers le bas dans les zones concaves et vers le haut dans les zones convexes.
-
