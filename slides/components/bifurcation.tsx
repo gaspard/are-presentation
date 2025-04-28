@@ -5,7 +5,8 @@ import { pointsExperiment } from "./lib/experiments";
 import { s, settingsValues } from "./lib/settings";
 
 export const LotkaVolterraOmnivoreChaos = () => {
-  const [j, setJ] = React.useState(0.5); // valeur initiale de j
+  const [j, setJ] = React.useState(0.5); // Valeur dynamique de j
+  const [key, setKey] = React.useState(0); // Clé pour forcer React à tout recharger
 
   const experiment = React.useMemo(() =>
     pointsExperiment({
@@ -18,7 +19,6 @@ export const LotkaVolterraOmnivoreChaos = () => {
         scene: { position: { x: -1, y: -0.6, z: -0.1 } },
       },
       settings: {
-        // mêmes paramètres qu'avant mais j est dynamique
         n: s.uint("trace", "iter.", 4000, (v) => v > 1),
         dt: s.float("dt", "$s$", 0.02, (v) => v > 0),
         speed: s.float("vitesse", "facteur", 3.0, (v) => v > 0),
@@ -37,7 +37,7 @@ export const LotkaVolterraOmnivoreChaos = () => {
         g: s.float("$g$", "cons. y→z", 0.01, (v) => v > 0),
         h: s.float("$h$", "mort. z", 0.3, (v) => v > 0),
         i: s.float("$i$", "rend. x→z", 0.5, (v) => v > 0),
-        j: s.float("$j$", "rend. y→z", j, (v) => v > 0), // <-- ici j vient du state
+        j: s.float("$j$", "rend. y→z", j, (v) => v > 0), // <-- j vient de l'état React
         break3: s.break(),
         rungeKutta: s.enum("Runge-Kutta", ["off", "on"], 1),
       },
@@ -76,7 +76,12 @@ export const LotkaVolterraOmnivoreChaos = () => {
         return step;
       },
     })
-  , [j]); // remémorise quand j change
+  , [j]); // Remémorise à chaque changement de j
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setJ(parseFloat(e.target.value));
+    setKey(prev => prev + 1); // Force React à recréer Experiment
+  };
 
   return (
     <>
@@ -88,11 +93,11 @@ export const LotkaVolterraOmnivoreChaos = () => {
           max="1"
           step="0.01"
           value={j}
-          onChange={(e) => setJ(parseFloat(e.target.value))}
-          style={{ width: '400px' }}
+          onChange={handleSliderChange}
+          style={{ width: '400px', margin: '10px' }}
         />
       </label>
-      <Experiment experiment={experiment} />
+      <Experiment key={key} experiment={experiment} />
     </>
   );
 };
