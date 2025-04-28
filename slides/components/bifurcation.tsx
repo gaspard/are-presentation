@@ -1,103 +1,112 @@
 import * as React from "react";
 import { makeStepper, ODE, Vect } from "../functional/runge-kutta";
-import { Experiment } from "./lib/Experiment";
-import { pointsExperiment } from "./lib/experiments";
-import { s, settingsValues } from "./lib/settings";
+import { Line } from "react-chartjs-2";
 
-export const LotkaVolterraOmnivoreChaos = () => {
-  const [j, setJ] = React.useState(0.5); // Valeur dynamique de j
-  const [key, setKey] = React.useState(0); // Clé pour forcer React à tout recharger
+export const PopulationVsJLive = () => {
+  const [data, setData] = React.useState<{ j: number; x: number; y: number; z: number }[]>([]);
+  const [j, setJ] = React.useState(0);
 
-  const experiment = React.useMemo(() =>
-    pointsExperiment({
-      view: {
-        scale: 1 / 20,
-        camera: {
-          position: { x: -7, y: 3, z: 1 },
-          lookAt: { x: 0, y: -0.2, z: 0.2 },
-        },
-        scene: { position: { x: -1, y: -0.6, z: -0.1 } },
-      },
-      settings: {
-        n: s.uint("trace", "iter.", 4000, (v) => v > 1),
-        dt: s.float("dt", "$s$", 0.02, (v) => v > 0),
-        speed: s.float("vitesse", "facteur", 3.0, (v) => v > 0),
-        seed: s.seed("reset"),
-        break: s.break(),
-        prey: s.float("proies", "qté", 10, (v) => v > 0),
-        predator: s.float("préd. int.", "qté", 10, (v) => v > 0),
-        omnivore: s.float("omnivore", "qté", 10, (v) => v > 0),
-        break2: s.break(),
-        a: s.float("$a$", "croiss. proie", 0.58, (v) => v > 0),
-        b: s.float("$b$", "compét. proie", 0.00647, (v) => v >= 0),
-        c: s.float("$c$", "cons. x→y", 0.02, (v) => v > 0),
-        d: s.float("$d$", "cons. x→z", 0.01, (v) => v > 0),
-        e: s.float("$e$", "mort. y", 0.3, (v) => v > 0),
-        f: s.float("$f$", "rend. x→y", 0.5, (v) => v > 0),
-        g: s.float("$g$", "cons. y→z", 0.01, (v) => v > 0),
-        h: s.float("$h$", "mort. z", 0.3, (v) => v > 0),
-        i: s.float("$i$", "rend. x→z", 0.5, (v) => v > 0),
-        j: s.float("$j$", "rend. y→z", j, (v) => v > 0), // <-- j vient de l'état React
-        break3: s.break(),
-        rungeKutta: s.enum("Runge-Kutta", ["off", "on"], 1),
-      },
-      type: "points",
-      make(settings) {
-        const {
-          n, dt, speed, rungeKutta,
-          a, b, c, d, e, f, g, h, i,
-          prey, predator, omnivore
-        } = settingsValues(settings);
-
-        const ode: ODE = {
-          dt,
-          speed,
-          steps: n,
-          rungeKutta: rungeKutta === 1,
-          dimension: 3,
-          startValue: [prey, predator, omnivore],
-          deriv: (input: Vect, t: number, output: Vect, offset: number) => {
-            const x = input[offset];
-            const y = input[offset + 1];
-            const z = input[offset + 2];
-            output[offset] = a * x - b * x * x - c * x * y - d * x * z;
-            output[offset + 1] = -e * y + f * c * x * y - g * y * z;
-            output[offset + 2] = -h * z + i * d * x * z + j * g * y * z;
-          },
-        };
-
-        const stepper = makeStepper(ode);
-
-        function step(time: number) {
-          stepper.step(time);
-          return stepper.data;
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setJ(prevJ => {
+        if (prevJ >= 1) {
+          clearInterval(interval);
+          return prevJ;
         }
+        return prevJ + 0.01;
+      });
+    }, 100); // toutes les 100ms, on augmente j
+    return () => clearInterval(interval);
+  }, []);
 
-        return step;
+  React.useEffect(() => {
+    if (j > 1) return;
+
+    const ode: ODE = {
+      dt: 0.02,
+      speed: 3.0,
+      steps: 4000,
+      rungeKutta: true,
+      dimension: 3,
+      startValue: [10, 10, 10],
+      deriv: (input: Vect, t: number, output: Vect, offset: number) => {
+        const x = input[offset];
+        const y = input[offset + 1];
+        const z = input[offset + 2];
+        output[offset] = 0.58 * x - 0.00647 * x * x - 0.02 * x * y - 0.01 * x * z;
+        output[offset + 1] = -0.3 * y + 0.5 * 0.02 * x * y - 0.01 * y * z;
+        output[offset + 2] = -0.3 * z + 0.5 * 0.01 * x * z + j * 0.01 * y * z;
       },
-    })
-  , [j]); // Remémorise à chaque changement de j
+    };
 
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setJ(parseFloat(e.target.value));
-    setKey(prev => prev + 1); // Force React à recréer Experiment
-  };
+    const stepper = makeStepper(ode);
+
+    let finalState = [0, 0, 0];
+
+    for (let i = 0; i < 5000; i++) {
+      const state = stepper.step(i * ode.dt);
+      if (i === 4999) {
+        finalState = [...state];
+      }
+    }
+
+    setData(prev => [
+      ...prev,
+      { j: parseFloat(j.toFixed(2)), x: finalState[0], y: finalState[1], z: finalState[2] }
+    ]);
+
+  }, [j]);
 
   return (
-    <>
-      <label>
-        j = {j.toFixed(2)}
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={j}
-          onChange={handleSliderChange}
-          style={{ width: '400px', margin: '10px' }}
-        />
-      </label>
-      <Experiment key={key} experiment={experiment} />
-    </>
+    <div>
+      <h2>Populations en fonction de j (mode animation)</h2>
+      <Line
+        data={{
+          labels: data.map((d) => d.j),
+          datasets: [
+            {
+              label: "Proies (x)",
+              data: data.map((d) => ({ x: d.j, y: d.x })),
+              borderColor: "blue",
+              backgroundColor: "blue",
+              pointRadius: 2,
+              showLine: true,
+            },
+            {
+              label: "Prédateurs (y)",
+              data: data.map((d) => ({ x: d.j, y: d.y })),
+              borderColor: "red",
+              backgroundColor: "red",
+              pointRadius: 2,
+              showLine: true,
+            },
+            {
+              label: "Omnivores (z)",
+              data: data.map((d) => ({ x: d.j, y: d.z })),
+              borderColor: "green",
+              backgroundColor: "green",
+              pointRadius: 2,
+              showLine: true,
+            },
+          ],
+        }}
+        options={{
+          scales: {
+            x: { title: { display: true, text: "j" } },
+            y: { title: { display: true, text: "population" } },
+          },
+          animation: {
+            duration: 0, // instantané
+          },
+          elements: {
+            point: {
+              radius: 2,
+            }
+          }
+        }}
+      />
+      <p>j = {j.toFixed(2)}</p>
+    </div>
   );
 };
+
