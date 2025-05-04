@@ -61,9 +61,8 @@ const stepper = {
 };
 
 function updateLotka(lotka: LotkaSettings) {
-  console.log("UPD");
   const g = { p: 2, dt: lotka.live.dt, f: lotka.live.f };
-  cellular.step = makeKernel(g);
+  cellular.kernel = makeKernel(g);
   const step = kutta(g, preyDeriv(lotka.live));
   stepper.dt = g.dt;
   stepper.step = (input: Float32Array, time: number, output: Float32Array) => {
