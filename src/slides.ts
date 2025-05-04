@@ -18,7 +18,6 @@ const presenterByGroup: Record<number, Presenter> = {
 function presenterFromName(name: string): Presenter {
   const re = /^(\d)/.exec(name);
   if (re) {
-    console.log(re);
     const group = parseInt(re[1]);
     return presenterByGroup[group] ?? "All";
   }

@@ -62,7 +62,10 @@ export function Slide({ slide }: { slide: Slide }) {
         </div>
         <div className="grow">ARE - proie / prédateur</div>
         <div className="flex flex-row w-30 gap-8 justify-end">
-          <div className="opacity-40">
+          <div
+            className="opacity-40 cursor-pointer"
+            onClick={() => navigate("/")}
+          >
             {slide.page}/{slide.total}
           </div>
           <div

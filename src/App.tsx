@@ -18,9 +18,20 @@ function App() {
               element={<Slide slide={slide} />}
             />
           ))}
+          <Route key="all" path="/all" element={<All />} />
         </Routes>
       </Suspense>
     </Router>
+  );
+}
+
+function All() {
+  return (
+    <div className="slide bg-predator-50 p-8 flex flex-col">
+      {slides.map(({ Component }) => (
+        <Component />
+      ))}
+    </div>
   );
 }
 
