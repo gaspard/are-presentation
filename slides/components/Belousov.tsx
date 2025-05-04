@@ -18,6 +18,7 @@ const experiment = gridExperiment({
   settings: {
     dt: s.float("dt", "$s$", 0.1, (v) => v > 0),
     speed: s.float("vitesse", "facteur", 3.0, (v) => v > 0),
+    // noise: s.enum("bruit", ["2D", "art"]),
     seed: s.seed("reset"),
     break: s.break(),
     Du: s.float("diff. u", "", 0.49, (v) => v >= 0),
@@ -31,7 +32,7 @@ const experiment = gridExperiment({
     return c;
   },
   make(settings, cellular) {
-    const { dt, Du, Dv, f, k } = settingsValues(settings);
+    const { dt, Du, Dv, f, k, noise } = settingsValues(settings);
 
     const kernel = makeKernel({
       Du,
@@ -39,6 +40,7 @@ const experiment = gridExperiment({
       f,
       k,
       dt,
+      type: "2D", // "2D" : "art",
     });
 
     cellular.kernel = kernel;

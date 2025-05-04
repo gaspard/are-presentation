@@ -14,6 +14,8 @@ export interface Settings {
   f: number; // Feed rate
   k: number; // Kill rate
   dt: number; // Time step
+  // noise type
+  type: "art" | "2D";
 }
 
 // Parameters for BZ-like reaction-diffusion (tweak for different patterns)
@@ -23,6 +25,7 @@ const defaultSettings = {
   f: 0.035, // Feed rate
   k: 0.06, // Kill rate
   dt: 1.0, // Time step
+  type: "2D" as "2D",
 };
 
 export function makeKernel({ Du, Dv, f, k, dt }: Settings) {
@@ -96,6 +99,6 @@ export function randomBelousov(
       wrap: true,
     },
     makeKernel(settings),
-    addGaussianNoise({ p, n, m }, [randomGauss(), randomGauss()])
+    addGaussianNoise({ p, n, m }, [randomGauss(), randomGauss()], settings.type)
   );
 }

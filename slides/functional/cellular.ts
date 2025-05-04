@@ -161,6 +161,34 @@ function loop(
 // Create a 2D noise function
 const noise2D = createNoise2D();
 
+function artNoiseArray(
+  arr: Float32Array,
+  {
+    n,
+    m,
+    p,
+  }: {
+    n: number;
+    m: number;
+    p: number;
+  },
+  pidx: number,
+  scale: number = 1
+): void {
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      const idx = (i * m + j) * p + pidx;
+      // Take wrapping into account
+      const angleX = (j / m) * 2 * Math.PI;
+      const angleY = (i / n) * 2 * Math.PI;
+      const x = Math.cos(angleX);
+      const y = Math.cos(angleY);
+
+      arr[idx] = arr[idx] + noise2D(x, y);
+    }
+  }
+}
+
 function fillNoiseArray(
   arr: Float32Array,
   {
@@ -198,7 +226,7 @@ export function snoise(
 
   for (let i = 0; i < g.p; ++i) {
     for (const s of sc) {
-      fillNoiseArray(arr, g, i, s);
+      artNoiseArray(arr, g, i, s);
     }
     scale(arr, range);
   }
@@ -224,11 +252,13 @@ export type Gaussian2D = {
 export function addGaussianNoise(
   g: { n: number; m: number; p: number },
   variables: Gaussian2D[],
+  type: "art" | "2D" = "2D",
   arr: Float32Array = new Float32Array(g.n * g.m * g.p)
 ): Float32Array {
+  const fn = type === "2D" ? fillNoiseArray : artNoiseArray;
   for (let i = 0; i < g.p; ++i) {
     fillGaussianArray(arr, g, i, variables[i]);
-    fillNoiseArray(arr, g, i);
+    fn(arr, g, i);
   }
   return arr;
 }
@@ -253,9 +283,13 @@ function fillGaussianArray(
       const x = (j / (m - 1)) * 2 - 1;
       const y = (i / (n - 1)) * 2 - 1;
 
-      // Distance to Gaussian center
-      const dx = x - gauss.center.x;
-      const dy = y - gauss.center.y;
+      // Distance au centre de la gaussienne avec wrapping.
+      let dx = Math.abs(x - gauss.center.x);
+      dx = Math.min(dx, 2 - dx);
+
+      let dy = Math.abs(y - gauss.center.y);
+      dy = Math.min(dy, 2 - dy);
+
       const dist2 = dx * dx + dy * dy;
 
       // 2D Gaussian formula
