@@ -26,7 +26,7 @@ export const slides: Slide[] = paths.map((path, idx) => {
     page: idx + 1,
     total: paths.length,
     file: files[path],
-    path: name.startsWith("00-") ? "/" : `/${name.toLowerCase()}`,
+    path: name.startsWith("00") ? "/" : `/${name.toLowerCase()}`,
     Component,
   };
 });
