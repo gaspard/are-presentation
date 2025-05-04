@@ -12,6 +12,27 @@ const defaultView = {
     lookAt: { x: 0, y: 0, z: 0 },
     position: { x: 0, y: 0, z: 5 },
   },
+  grid: {
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform sampler2D uData;
+      varying vec2 vUv;
+  
+      void main() {
+        float u = texture2D(uData, vUv).r;
+        float v = texture2D(uData, vUv).g;
+        vec3 color = vec3(u, v, 0.0);
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `,
+  },
   axes: true,
 };
 
@@ -183,7 +204,7 @@ export function addGrid(
   scene: THREE.Scene,
   experiment: { n: number; m: number; p: number; view: View }
 ) {
-  // const view = deepMerge(defaultView, experiment.view);
+  const view = deepMerge(defaultView, experiment.view);
   const geometry = new THREE.PlaneGeometry(2, 2);
   const height = experiment.n;
   const width = experiment.m;
@@ -214,25 +235,8 @@ export function addGrid(
 
   const material = new THREE.ShaderMaterial({
     uniforms: uniforms,
-    vertexShader: `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform float uTime;
-      uniform sampler2D uData;
-      varying vec2 vUv;
-  
-      void main() {
-        float u = texture2D(uData, vUv).r;
-        float v = texture2D(uData, vUv).g;
-        vec3 color = vec3(u, v, 0.0);
-        gl_FragColor = vec4(color, 1.0);
-      }
-    `,
+    vertexShader: view.grid.vertexShader,
+    fragmentShader: view.grid.fragmentShader,
   });
   const mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);

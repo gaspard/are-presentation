@@ -15,24 +15,39 @@ const experiment = gridExperiment({
     scene: {
       position: { x: -0.9, y: -0.8 },
     },
+    grid: {
+      fragmentShader: `
+      uniform float uTime;
+      uniform sampler2D uData;
+      varying vec2 vUv;
+  
+      void main() {
+        // x = proies
+        float x = texture2D(uData, vUv).r;
+        // y = prédateurs
+        float y = texture2D(uData, vUv).g;
+        // vec3 color = vec3(1. - y, x, x*y);
+        vec3 color = vec3(y, x, 0.);
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `,
+    },
   },
   p: 2, // RG
-  m: 200,
-  n: 200,
+  m: 400,
+  n: 400,
   settings: {
-    dt: s.float("dt", "$s$", 0.3, (v) => v > 0),
+    dt: s.float("dt", "$s$", 2.0, (v) => v > 0),
     speed: s.float("vitesse", "facteur", 1.0, (v) => v > 0),
-    noise: s.enum("bruit", ["2D", "arty"]),
+    noise: s.enum("bruit", ["2D", "blocks"], 1),
     seed: s.seed("reset"),
     break: s.break(),
-    Du: s.float("diff. u", "", 0.49, (v) => v >= 0),
-    Dv: s.float("diff. v", "", 0.03, (v) => v >= 0),
-    f: s.float("feed", "", 0.035, (v) => v >= 0),
-    k: s.float("kill", "", 0.06, (v) => v >= 0),
+    Du: s.float("diff. u", "", 0.1, (v) => v >= 0 && v <= 0.2),
+    Dv: s.float("diff. v", "", 0.1, (v) => v >= 0 && v <= 0.2),
     break2: s.break(),
-    alpha: s.float("$\\alpha$", "", 0.58, (v) => v > 0),
-    beta: s.float("$\\beta$", "", 0.02, (v) => v > 0),
-    gamma: s.float("$\\gamma$", "", 0.01, (v) => v > 0),
+    alpha: s.float("$\\alpha$", "", 0.3, (v) => v > 0),
+    beta: s.float("$\\beta$", "", 0.03, (v) => v > 0),
+    gamma: s.float("$\\gamma$", "", 0.03, (v) => v > 0),
     delta: s.float("$\\delta$", "", 0.3, (v) => v > 0),
   },
   type: "grid",
@@ -44,21 +59,29 @@ const experiment = gridExperiment({
     return { cellular, ode };
   },
   make(settings, { ode, cellular }: { ode: Stepper; cellular: Cellular }) {
-    const { dt, Du, Dv, f, k, noise } = settingsValues(settings);
+    console.log("MAKE");
+    const { dt, Du, Dv, alpha, beta, gamma, delta } = settingsValues(settings);
 
-    const kernel = makeKernel({
+    cellular.kernel = makeKernel({
       Du,
       Dv,
-      f,
-      k,
       dt,
     });
 
-    cellular.kernel = kernel;
+    ode.deriv = lvDeriv({ alpha, beta, gamma, delta });
 
-    function step(time: number) {
-      // Diffuse step
-      cellular.step(time);
+    let last_t = 0;
+
+    function step(_time: number) {
+      let t = last_t;
+      const time = t + 5 * dt;
+
+      while (t < time) {
+        // Diffuse step
+        cellular.step(t);
+        t += dt;
+      }
+      last_t = dt;
       // Lotka-Volterra in each cell step
       cellular.swap(); // previous output becomes our input
 
@@ -72,7 +95,7 @@ const experiment = gridExperiment({
       for (let i = 0; i < len; ++i) {
         const input = new Float32Array(inp, i * dimension * bpe, dimension);
         const output = new Float32Array(out, i * dimension * bpe, dimension);
-        ode.step2(input, dt, output);
+        ode.step2(input, dt * 2, output);
       }
 
       return cellular.output.values;
@@ -87,15 +110,11 @@ export const LotkaTerritory = () => <Experiment experiment={experiment} />;
 function makeKernel({
   Du,
   Dv,
-  f,
-  k,
   dt,
 }: {
   // Diffusion
   Du: number;
   Dv: number;
-  f: number;
-  k: number;
   dt: number;
 }) {
   return function kernel(
@@ -112,21 +131,14 @@ function makeKernel({
     let lap_u = 0,
       lap_v = 0;
     // Moore neighborhood weights: center 4, sides 1, corners 0.5 (optional)
-    const weights = [0.5, 1, 0.5, 1, -6, 1, 0.5, 1, 0.5];
+    const weights = [0.05, 0.2, 0.05, 0.2, -1, 0.2, 0.05, 0.2, 0.05];
     for (let i = 0; i < 9; i++) {
-      lap_u += input[i][0] * weights[i];
-      lap_v += input[i][1] * weights[i];
+      lap_u += input[i][0] * weights[i] * 4;
+      lap_v += input[i][1] * weights[i] * 4;
     }
 
-    // Reaction-diffusion equations (Gray-Scott style, BZ-like)
-    // du/dt = Du * Laplacian(u) - u*v*v + f*(1-u)
-    // dv/dt = Dv * Laplacian(v) + u*v*v - (f + k)*v
-    const uvv = u * v * v;
-    const du = Du * lap_u - uvv + f * (1 - u);
-    const dv = Dv * lap_v + uvv - (f + k) * v;
-
-    output[0] = clip(0, 300, u + du * dt);
-    output[1] = clip(0, 300, v + dv * dt);
+    output[0] = clip(0, 300, u + lap_u * Du);
+    output[1] = clip(0, 300, v + lap_v * Dv);
   };
 }
 
@@ -173,23 +185,15 @@ function lvDeriv({
   delta: number;
 }) {
   return (input: Vect, t: number, output: Vect, offset: number) => {
+    // proies (Green)
     let x = clip(0.001, 400, input[offset] * 20);
+    // prédateurs (Red)
     let y = clip(0.001, 400, input[offset + 1] * 20);
 
     const dx = (alpha * x - beta * x * y) / 400;
-    if (isNaN(dx)) {
-      console.log({ x, y });
-      output[offset] = 0;
-    } else {
-      output[offset] = dx;
-    }
+    output[offset] = dx;
 
     const dy = (gamma * x * y - delta * y) / 400;
-    if (isNaN(dy)) {
-      console.log({ x, y });
-      output[offset + 1] = 0;
-    } else {
-      output[offset + 1] = dy;
-    }
+    output[offset + 1] = dy;
   };
 }
