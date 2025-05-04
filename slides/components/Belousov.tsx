@@ -18,7 +18,7 @@ const experiment = gridExperiment({
   settings: {
     dt: s.float("dt", "$s$", 0.1, (v) => v > 0),
     speed: s.float("vitesse", "facteur", 3.0, (v) => v > 0),
-    // noise: s.enum("bruit", ["2D", "art"]),
+    noise: s.enum("bruit", ["2D", "arty"]),
     seed: s.seed("reset"),
     break: s.break(),
     Du: s.float("diff. u", "", 0.49, (v) => v >= 0),
@@ -28,7 +28,9 @@ const experiment = gridExperiment({
   },
   type: "grid",
   init: (experiment) => {
-    const c = randomBelousov(experiment.n, experiment.m);
+    const c = randomBelousov(experiment.n, experiment.m, {
+      type: experiment.settings.noise.value === 0 ? "2D" : "art",
+    });
     return c;
   },
   make(settings, cellular) {

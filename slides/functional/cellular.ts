@@ -158,9 +158,6 @@ function loop(
   }
 }
 
-// Create a 2D noise function
-const noise2D = createNoise2D();
-
 function artNoiseArray(
   arr: Float32Array,
   {
@@ -175,14 +172,18 @@ function artNoiseArray(
   pidx: number,
   scale: number = 1
 ): void {
+  const xscale = Math.random() * 2;
+  const noise2D = createNoise2D();
+  const deltaX = Math.random() * 2 * Math.PI;
+  const deltaY = Math.random() * 2 * Math.PI;
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < m; j++) {
       const idx = (i * m + j) * p + pidx;
       // Take wrapping into account
       const angleX = (j / m) * 2 * Math.PI;
       const angleY = (i / n) * 2 * Math.PI;
-      const x = Math.cos(angleX);
-      const y = Math.cos(angleY);
+      const x = Math.cos(deltaX + angleX) * xscale;
+      const y = Math.cos(deltaY + angleY) * xscale;
 
       arr[idx] = arr[idx] + noise2D(x, y);
     }
@@ -203,6 +204,7 @@ function fillNoiseArray(
   pidx: number,
   scale: number = 1
 ): void {
+  const noise2D = createNoise2D();
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < m; j++) {
       const idx = (i * m + j) * p + pidx;
@@ -256,9 +258,10 @@ export function addGaussianNoise(
   arr: Float32Array = new Float32Array(g.n * g.m * g.p)
 ): Float32Array {
   const fn = type === "2D" ? fillNoiseArray : artNoiseArray;
+  const scale = Math.random();
   for (let i = 0; i < g.p; ++i) {
     fillGaussianArray(arr, g, i, variables[i]);
-    fn(arr, g, i);
+    fn(arr, g, i, scale ** 4);
   }
   return arr;
 }

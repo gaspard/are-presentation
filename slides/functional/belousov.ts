@@ -25,7 +25,7 @@ const defaultSettings = {
   f: 0.035, // Feed rate
   k: 0.06, // Kill rate
   dt: 1.0, // Time step
-  type: "2D" as "2D",
+  type: "art" as "2D",
 };
 
 export function makeKernel({ Du, Dv, f, k, dt }: Settings) {
@@ -61,18 +61,6 @@ export function makeKernel({ Du, Dv, f, k, dt }: Settings) {
   };
 }
 
-const anoise: Gaussian2D = {
-  center: { x: 0, y: 0 },
-  radius: 0.25,
-  scale: 1,
-};
-
-const bnoise: Gaussian2D = {
-  center: { x: 0.3, y: 0.3 },
-  radius: 0.5,
-  scale: 1,
-};
-
 function rand(from: number, to: number) {
   return from + (to - from) * Math.random();
 }
@@ -88,7 +76,7 @@ function randomGauss(scale = 1.0): Gaussian2D {
 export function randomBelousov(
   n: number,
   m: number,
-  settings: Settings = defaultSettings
+  settings: Partial<Settings> = defaultSettings
 ): Cellular {
   const p = 2;
   return makeCellular(
@@ -98,7 +86,11 @@ export function randomBelousov(
       m,
       wrap: true,
     },
-    makeKernel(settings),
-    addGaussianNoise({ p, n, m }, [randomGauss(), randomGauss()], settings.type)
+    makeKernel(Object.assign({}, defaultSettings, settings)),
+    addGaussianNoise(
+      { p, n, m },
+      [randomGauss(), randomGauss()],
+      settings.type || defaultSettings.type
+    )
   );
 }
