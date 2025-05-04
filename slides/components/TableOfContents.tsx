@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { slides } from "../../src/slides";
 import "./toc.css";
 
-export function Toc() {
+export function TableOfContents() {
   return (
     <div className="toc grid grid-cols-[1fr_0fr]">
       {slides.map((slide) => (
