@@ -6,6 +6,7 @@ import { s, settingsValues } from "./lib/settings";
 
 const experiment = gridExperiment({
   view: {
+    axes: false,
     scale: 1 / 60,
     scene: {
       position: { x: -0.9, y: -0.8 },
@@ -51,4 +52,4 @@ const experiment = gridExperiment({
   },
 });
 
-export const Besoulov = () => <Experiment experiment={experiment} />;
+export const Belousov = () => <Experiment experiment={experiment} />;

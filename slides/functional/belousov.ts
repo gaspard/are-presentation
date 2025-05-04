@@ -48,8 +48,8 @@ export function makeKernel({ Du, Dv, f, k, dt }: Settings) {
     const du = Du * lap_u - uvv + f * (1 - u);
     const dv = Dv * lap_v + uvv - (f + k) * v;
 
-    output[0] = u + du * dt;
-    output[1] = v + dv * dt;
+    output[0] = Math.max(0, u + du * dt);
+    output[1] = Math.max(0, v + dv * dt);
   };
 }
 

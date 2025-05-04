@@ -57,11 +57,8 @@ export function SettingsView<T extends Object>(props: { settings: Settings }) {
 }
 
 export function Setting({ setting }: { setting: Setting }) {
-  if (isFloat(setting)) {
-    return <Float setting={setting} />;
-  }
-  if (isUint(setting)) {
-    return <Uint setting={setting} />;
+  if (isFloat(setting) || isUint(setting)) {
+    return <Number setting={setting} />;
   }
   if (isBoolean(setting)) {
     return <Enum setting={setting} />;
@@ -74,9 +71,17 @@ export function Setting({ setting }: { setting: Setting }) {
   }
 }
 
-function Float({ setting }: { setting: FloatSetting }) {
+function uintScaler(value: number, d: number) {
+  const v = scaler(value, d * 5);
+  return Math.floor(v);
+}
+
+const floatScaler = scaler;
+
+function Number({ setting }: { setting: FloatSetting | UintSetting }) {
   const s = useTilia(setting);
   const [dragging, setDragging] = useState(false);
+  const scaler = s.type === "float" ? floatScaler : uintScaler;
   return (
     <span
       className={`value font-bold text-md cursor-move ${
@@ -117,10 +122,12 @@ function Float({ setting }: { setting: FloatSetting }) {
     >
       {dragging ? (
         <span className="p-1 bg-research-200 text-research-800 rounded-sm font-mono">
-          {formatFloat(s.value, 2)}
+          {s.type === "float" ? formatFloat(s.value, 2) : s.value}
         </span>
-      ) : (
+      ) : s.type === "float" ? (
         formatFloat(s.value)
+      ) : (
+        s.value
       )}
     </span>
   );
