@@ -46,7 +46,7 @@ Comprendre le terme de diffusion:
 
 ![Listes proies/prédateurs](/are-presentation/img/Listes.PNG)
 
-Comment passer à l'instant t=1?
+Comment passer à l'instant t suivant?
 
 - Transformer la dérivée en différence finie
 
@@ -57,6 +57,27 @@ $$
     \frac{u(t+h)-u(t)}{h} = u'(t)
 \end{aligned}
 $$
+
+Comment calculer le terme de diffusion à chaque instant? 
+
+$$
+\begin{aligned}
+    u(x+k) = u(x) + u'(x)k + \frac{u''(x)k^2}{2} + o(k^2) \\
+    u(x-k) = u(x) - u'(x)k + \frac{u''(x)k^2}{2} + o(k^2) 
+\end{aligned}
+$$
+
+On a : 
+
+$$
+\begin{aligned}
+    u(x+k) + u(x-k) = 2u(x) + u''(x)k^2 \\
+    \Leftrightarrow
+    u''(x) = \frac{u(x+k)+u(x-k) - 2u(x)}{k^2}
+\end{aligned}
+$$
+
+
 
 
 <video src="/are-presentation/img/LV-anim1.mp4" width="100%" controls></video>
