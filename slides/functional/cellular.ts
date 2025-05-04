@@ -58,7 +58,7 @@ export function makeGrid(
     for (let j = -1; j <= m; ++j) {
       if (i < 0 || i >= n || j < 0 || j >= m) {
         if (wrap) {
-          // will fix later
+          // Will be set after this first setup
         } else {
           row[j + 1] = e;
         }

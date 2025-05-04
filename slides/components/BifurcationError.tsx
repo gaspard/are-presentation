@@ -1,3 +1,4 @@
+/*
 import * as React from "react";
 import { makeStepper, ODE, Vect } from "../functional/runge-kutta";
 import { Line } from "react-chartjs-2";
@@ -110,3 +111,4 @@ export const PopulationVsJLive = () => {
   );
 };
 
+*/

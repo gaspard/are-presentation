@@ -1,333 +1,195 @@
-import { observe, tilia } from "@tilia/react";
 import * as React from "react";
-import { useEffect, useRef } from "react";
-import * as THREE from "three";
-import { Cellular, makeCellular, snoise, Vect } from "../functional/cellular";
-import { makeKernel } from "../functional/diffuse";
-import { kutta, ODE } from "../functional/runge-kutta";
-import { SettingsView } from "./lib/SettingsView";
+import { randomBelousov } from "../functional/belousov";
+import { Cellular, Vect } from "../functional/cellular";
+import { makeStepper, ODE, Stepper } from "../functional/runge-kutta";
+import { Experiment } from "./lib/Experiment";
+import { gridExperiment } from "./lib/experiments";
+import { s, settingsValues } from "./lib/settings";
 
-const g = { n: 40, m: 40, p: 2, wrap: true };
-const noise = snoise(g, [0, 1], [0.1, 0.02, 0.0002]);
-for (let i = 0; i < noise.length; i++) {
-  noise[i] = Math.max(0, noise[i] ** 4 * 40);
-}
+const bpe = Float32Array.BYTES_PER_ELEMENT;
 
-const cellular = makeCellular(g, makeKernel({ dt: 0.0001, f: 0.01 }), noise);
-
-const lotka = tilia({
-  setup: {
-    // reset simulation
-    prey: 10,
-    predator: 15,
-    steps: 840,
+const experiment = gridExperiment({
+  view: {
+    axes: false,
+    scale: 1 / 60,
+    scene: {
+      position: { x: -0.9, y: -0.8 },
+    },
   },
-  live: {
-    speed: 3.0,
-    dt: 0.006,
-    f: 0.1,
-    alpha: 0.72,
-    beta: 0.02,
-    gamma: 0.01,
-    delta: 0.3,
-    rungeKutta: true,
+  p: 2, // RG
+  m: 200,
+  n: 200,
+  settings: {
+    dt: s.float("dt", "$s$", 0.3, (v) => v > 0),
+    speed: s.float("vitesse", "facteur", 1.0, (v) => v > 0),
+    noise: s.enum("bruit", ["2D", "arty"]),
+    seed: s.seed("reset"),
+    break: s.break(),
+    Du: s.float("diff. u", "", 0.49, (v) => v >= 0),
+    Dv: s.float("diff. v", "", 0.03, (v) => v >= 0),
+    f: s.float("feed", "", 0.035, (v) => v >= 0),
+    k: s.float("kill", "", 0.06, (v) => v >= 0),
+    break2: s.break(),
+    alpha: s.float("$\\alpha$", "", 0.58, (v) => v > 0),
+    beta: s.float("$\\beta$", "", 0.02, (v) => v > 0),
+    gamma: s.float("$\\gamma$", "", 0.01, (v) => v > 0),
+    delta: s.float("$\\delta$", "", 0.3, (v) => v > 0),
+  },
+  type: "grid",
+  init: (experiment) => {
+    const cellular: Cellular = randomBelousov(experiment.n, experiment.m, {
+      type: experiment.settings.noise.value === 0 ? "2D" : "art",
+    });
+    const ode: Stepper = makeLv(experiment.settings);
+    return { cellular, ode };
+  },
+  make(settings, { ode, cellular }: { ode: Stepper; cellular: Cellular }) {
+    const { dt, Du, Dv, f, k, noise } = settingsValues(settings);
+
+    const kernel = makeKernel({
+      Du,
+      Dv,
+      f,
+      k,
+      dt,
+    });
+
+    cellular.kernel = kernel;
+
+    function step(time: number) {
+      // Diffuse step
+      cellular.step(time);
+      // Lotka-Volterra in each cell step
+      cellular.swap(); // previous output becomes our input
+
+      // We use 'output' format (not the neighbours). Name should be
+      // changed...
+      const inp = cellular.input.values.buffer;
+      const out = cellular.output.values.buffer;
+      const len = cellular.grid.n * cellular.grid.m;
+      const dimension = cellular.grid.p;
+
+      for (let i = 0; i < len; ++i) {
+        const input = new Float32Array(inp, i * dimension * bpe, dimension);
+        const output = new Float32Array(out, i * dimension * bpe, dimension);
+        ode.step2(input, dt, output);
+      }
+
+      return cellular.output.values;
+    }
+
+    return step;
   },
 });
 
-const lotkaRange = {
-  setup: {
-    // reset simulation
-    prey: [1, 40, 0.01],
-    predator: [1, 40, 0.01],
-    steps: [1, 2000, 1],
-  },
-  live: {
-    speed: [0.1, 100],
-    dt: [0.0001, 0.1, 0.0001],
-    f: [0.0001, 5, 0.0001],
-    alpha: [0, 1, 0.01],
-    beta: [0, 1, 0.01],
-    gamma: [0, 1, 0.01],
-    delta: [0, 1, 0.01],
-    rungeKutta: [0, 0, 0.01],
-  },
-};
+export const LotkaTerritory = () => <Experiment experiment={experiment} />;
 
-type LotkaSettings = typeof lotka;
+function makeKernel({
+  Du,
+  Dv,
+  f,
+  k,
+  dt,
+}: {
+  // Diffusion
+  Du: number;
+  Dv: number;
+  f: number;
+  k: number;
+  dt: number;
+}) {
+  return function kernel(
+    input: Float32Array[],
+    t: number,
+    output: Float32Array
+  ) {
+    // Gather self and neighbors
+    const self = input[4];
+    const u = self[0];
+    const v = self[1];
 
-const stepper = {
-  dt: lotka.live.dt,
-  step(input: Float32Array, time: number, output: Float32Array) {},
-};
-
-function updateLotka(lotka: LotkaSettings) {
-  const g = { p: 2, dt: lotka.live.dt, f: lotka.live.f };
-  cellular.kernel = makeKernel(g);
-  const step = kutta(g, preyDeriv(lotka.live));
-  stepper.dt = g.dt;
-  stepper.step = (input: Float32Array, time: number, output: Float32Array) => {
-    // p = 2
-    const len = input.length / 2;
-    for (let i = 0; i < len; ++i) {
-      step(input, time, output, i * 2, i * 2);
+    // Compute Laplacian (discrete diffusion) for u and v
+    let lap_u = 0,
+      lap_v = 0;
+    // Moore neighborhood weights: center 4, sides 1, corners 0.5 (optional)
+    const weights = [0.5, 1, 0.5, 1, -6, 1, 0.5, 1, 0.5];
+    for (let i = 0; i < 9; i++) {
+      lap_u += input[i][0] * weights[i];
+      lap_v += input[i][1] * weights[i];
     }
+
+    // Reaction-diffusion equations (Gray-Scott style, BZ-like)
+    // du/dt = Du * Laplacian(u) - u*v*v + f*(1-u)
+    // dv/dt = Dv * Laplacian(v) + u*v*v - (f + k)*v
+    const uvv = u * v * v;
+    const du = Du * lap_u - uvv + f * (1 - u);
+    const dv = Dv * lap_v + uvv - (f + k) * v;
+
+    output[0] = clip(0, 300, u + du * dt);
+    output[1] = clip(0, 300, v + dv * dt);
   };
 }
 
-observe(lotka, (lotka) => {
-  updateLotka(lotka);
-});
+function makeLv(settings) {
+  const { n, dt, speed, rungeKutta, alpha, beta, gamma, delta } =
+    settingsValues(settings);
 
-export function LotkaTerritory() {
-  const domElem = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!domElem.current) return;
-    const scene = setupScene(domElem.current);
-    const sim = displayPoints(scene);
-    scene.start(sim.step);
-
-    // Cleanup on unmount
-    return () => {
-      sim.cleanup();
-      scene.cleanup();
-    };
-  }, []);
-
-  return (
-    <>
-      <div
-        ref={domElem}
-        style={{
-          width: "800px",
-          height: "800px",
-          display: "block",
-        }}
-      />
-      <SettingsView settings={lotka.live} range={lotkaRange.live} />
-    </>
-  );
-}
-
-export type Simulation = {
-  mesh: THREE.Mesh;
-  scene: Scene;
-  step: (elapsed: number) => void;
-  cleanup: () => void;
-};
-
-function displayPoints(scene: Scene, scale: number = 1): Simulation {
-  const geometry = new THREE.PlaneGeometry(2, 2);
-  const height = cellular.grid.n;
-  const width = cellular.grid.m;
-
-  const data = cellular.g[0].values;
-
-  const texture = new THREE.DataTexture(
-    data,
-    width,
-    height,
-    THREE.RGFormat, // Only using red and green channels
-    THREE.FloatType
-  );
-  texture.needsUpdate = true;
-
-  const uniforms = {
-    uTime: { value: 0.0 },
-    uData: { value: texture },
-  };
-
-  const material = new THREE.ShaderMaterial({
-    uniforms: uniforms,
-    vertexShader: `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = vec4(position, 1.);
-      }
-    `,
-    fragmentShader: `
-      uniform float uTime;
-      uniform sampler2D uData;
-      varying vec2 vUv;
-  
-      void main() {
-        float prey = texture2D(uData, vUv).r / 60.;
-        float predator = texture2D(uData, vUv).g / 60.;
-        vec3 color = vec3(predator, prey, 0.);
-        gl_FragColor = vec4(color, 1.);
-      }
-    `,
-  });
-  const mesh = new THREE.Mesh(geometry, material);
-  scene.scene.add(mesh);
-
-  function step(time: number) {
-    // Diffuse
-    let t = cellular.t;
-    // maybe diffuse should be in the while loop (or we adapt dt ?)
-    cellular.next(time);
-    while (t < time) {
-      cellular.swap();
-      // Lotka-Volterra
-      stepper.step(cellular.input.values, time, cellular.output.values);
-      t += stepper.dt;
-    }
-    cellular.t = time;
-
-    texture.image.data = cellular.output.values;
-
-    uniforms.uTime.value = time;
-    texture.needsUpdate = true;
-  }
-
-  return {
-    scene,
-    mesh,
-    step,
-    cleanup() {},
-  };
-}
-
-function setupScene(elem: HTMLDivElement): Scene {
-  // Create scene
-  const scene = new THREE.Scene();
-
-  // Set up camera
-  const width = elem.clientWidth || 800;
-  const height = elem.clientHeight || 800;
-  const aspect = width / height;
-
-  // Orthographic camera that fits the plane
-  const camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10);
-  camera.position.z = 1; // Move camera back so it can see the plane
-
-  // Create renderer
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(width, height);
-  elem.appendChild(renderer.domElement);
-
-  // Render function
-  let run = false;
-
-  function start(update: (time: number) => void) {
-    if (run === false) {
-      run = true;
-      let prevTime: number | undefined;
-      function animate(time: number) {
-        if (run) {
-          requestAnimationFrame(animate);
-          if (prevTime === undefined) {
-            prevTime = time;
-          }
-          update((time - prevTime) / 1000);
-          renderer.render(scene, camera);
-        }
-      }
-      requestAnimationFrame(animate);
-    }
-  }
-
-  function stop() {
-    run = false;
-  }
-
-  // Handle window resize for orthographic camera
-  function resize() {
-    const w = elem.clientWidth || 800;
-    const h = elem.clientHeight || 800;
-    const aspect = w / h;
-    camera.left = -aspect;
-    camera.right = aspect;
-    camera.top = 1;
-    camera.bottom = -1;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  }
-
-  window.addEventListener("resize", resize);
-
-  function cleanup() {
-    window.removeEventListener("resize", resize);
-    renderer.dispose();
-  }
-
-  return {
-    scene,
-    renderer,
-    camera,
-    cleanup,
-    start,
-    stop,
-  };
-}
-
-interface Scene {
-  scene: THREE.Scene;
-  renderer: THREE.WebGLRenderer;
-  camera: THREE.OrthographicCamera;
-  cleanup: () => void;
-  start: (update: (time: number) => void) => void;
-  stop: () => void;
-}
-
-function clickAction(
-  { scene: { renderer, camera }, mesh }: Simulation,
-  cellular: Cellular
-) {
-  const { grid, g } = cellular;
-  function onMove(event) {
-    // Get mouse position in normalized device coordinates (-1 to +1)
-    const rect = renderer.domElement.getBoundingClientRect();
-    const mouse = new THREE.Vector2(
-      ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      -((event.clientY - rect.top) / rect.height) * 2 + 1
-    );
-
-    // Raycast from camera
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-
-    // Intersect with your plane mesh
-    const intersects = raycaster.intersectObject(mesh);
-    if (intersects.length > 0) {
-      const point = intersects[0].point; // 3D point on the plane
-
-      // Map point to grid coordinates (assuming plane covers [-1,1] x [-1,1])
-      const x = Math.floor(((point.x + 1) / 2) * grid.m);
-      const y = Math.floor((1 - (point.y + 1) / 2) * grid.n);
-
-      // Update your simulation state
-      const i = grid.m * x + y;
-      const v0 = 1.0 - g[0].output[i][0];
-      const v1 = 1.0 - g[0].output[i][1];
-      g[0].output[i][0] = v1;
-      g[1].output[i][1] = v0;
-    }
-  }
-  renderer.domElement.addEventListener("mousemove", onMove, false);
-}
-
-function prey({ setup, live }: LotkaSettings): ODE {
   const ode: ODE = {
-    dt: live.dt,
+    dt,
+    speed,
     steps: 1,
-    speed: live.speed,
     rungeKutta: true,
-    dimension: 3,
-    startValue: [setup.prey, setup.predator, 0], // MUST BE 3 for THREE.js 3D position
-    deriv: preyDeriv(live),
+
+    dimension: 2,
+    // Initial position 1, velocity 0, z = 0.
+    // This does not matter (values are replaced with cellular data).
+    startValue: [10, 10],
+    deriv: lvDeriv({ alpha, beta, gamma, delta }),
   };
-  return ode;
+
+  const stepper = makeStepper(ode);
+
+  return stepper;
 }
 
-function preyDeriv({ alpha, beta, gamma, delta }: LotkaSettings["live"]) {
+function clip(min, max, v) {
+  if (v < min) {
+    return min;
+  } else if (v > max) {
+    return max;
+  }
+  return v;
+}
+
+function lvDeriv({
+  alpha,
+  beta,
+  gamma,
+  delta,
+}: {
+  alpha: number;
+  beta: number;
+  gamma: number;
+  delta: number;
+}) {
   return (input: Vect, t: number, output: Vect, offset: number) => {
-    const x = input[offset];
-    const y = input[offset + 1];
-    // dx / dt = alpha x - beta x y
-    output[offset] = alpha * x - beta * x * y;
-    // dy / dt = gamma x y - delta y
-    output[offset + 1] = gamma * x * y - delta * y;
+    let x = clip(0.001, 400, input[offset] * 20);
+    let y = clip(0.001, 400, input[offset + 1] * 20);
+
+    const dx = (alpha * x - beta * x * y) / 400;
+    if (isNaN(dx)) {
+      console.log({ x, y });
+      output[offset] = 0;
+    } else {
+      output[offset] = dx;
+    }
+
+    const dy = (gamma * x * y - delta * y) / 400;
+    if (isNaN(dy)) {
+      console.log({ x, y });
+      output[offset + 1] = 0;
+    } else {
+      output[offset + 1] = dy;
+    }
   };
 }

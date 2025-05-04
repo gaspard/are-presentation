@@ -39,6 +39,8 @@ export type Stepper = {
   i: number;
   deriv: ODE["deriv"];
   step: (elapsed: number) => void;
+  // Temporary for LK territory
+  step2: (input: Float32Array, dt: number, output: Float32Array) => void;
 };
 
 export function makeStepper(
@@ -72,6 +74,7 @@ export function makeStepper(
     rk: rungeKutta,
     deriv,
     step: () => {},
+    step2: () => {},
   };
   for (let i = 0; i <= steps; ++i) {
     stepper.data.set(startValue, i * dimension);
@@ -92,6 +95,39 @@ export function makeStepper(
   const k3 = new Float32Array(dimension);
   const x_k3 = new Float32Array(dimension);
   const k4 = new Float32Array(dimension);
+
+  // Bad fix for LotkaTerritory simulation
+  stepper.step2 = (input: Float32Array, dt: number, output: Float32Array) => {
+    const deriv = stepper.deriv;
+    const t = stepper.t;
+    // while (t < time) {
+    if (stepper.rk) {
+      // k1 / dt =  slope(x)
+      deriv(input, t, k1, 0);
+      // x_k1 = x + k1 / 2;
+      for (let j = 0; j < dimension; ++j) x_k1[j] = input[j] + (dt * k1[j]) / 2;
+      // k2 = dt * slope(x + k1/2)
+      deriv(x_k1, t + dt / 2, k2, 0);
+      // x_k2 = x + k2 / 2;
+      for (let j = 0; j < dimension; ++j) x_k2[j] = input[j] + (dt * k2[j]) / 2;
+      // k3 = dt * slope(x + k2/2)
+      deriv(x_k2, t + dt / 2, k3, 0);
+      // x_k3 = x + k3;
+      for (let j = 0; j < dimension; ++j) x_k3[j] = input[j] + dt * k3[j];
+      // k4 = dt * slope(x + k3)
+      deriv(x_k3, t, k4, 0);
+      // x = x + 1/6 (k1 + 2 k2 + 2 k3 + k4)
+      for (let j = 0; j < dimension; ++j)
+        output[j] =
+          input[j] + (dt * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j])) / 6;
+    } else {
+      // step outputs delta value
+      deriv(input, t, output, 0);
+      for (let j = 0; j < dimension; ++j) output[j] = input[j] + output[j] * dt;
+    }
+    stepper.t += dt;
+    // }
+  };
 
   stepper.step = (atime: number) => {
     const time = atime * ode.speed;
