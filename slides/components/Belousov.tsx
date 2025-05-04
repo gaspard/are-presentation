@@ -13,8 +13,8 @@ const experiment = gridExperiment({
     },
   },
   p: 2, // RG
-  m: 400,
-  n: 400,
+  m: 200,
+  n: 200,
   settings: {
     dt: s.float("dt", "$s$", 0.1, (v) => v > 0),
     speed: s.float("vitesse", "facteur", 3.0, (v) => v > 0),
@@ -27,7 +27,7 @@ const experiment = gridExperiment({
   },
   type: "grid",
   init: (experiment) => {
-    const c = randomBelousov(400, 400);
+    const c = randomBelousov(experiment.n, experiment.m);
     return c;
   },
   make(settings, cellular) {

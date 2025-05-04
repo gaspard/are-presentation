@@ -1,7 +1,12 @@
 // input: 9 neighbors, each Float32Array of length 2 (u, v)
 // output: Float32Array of length 2 (u, v)
 
-import { Cellular, makeCellular } from "./cellular";
+import {
+  addGaussianNoise,
+  Cellular,
+  Gaussian2D,
+  makeCellular,
+} from "./cellular";
 
 export interface Settings {
   Du: number;
@@ -53,6 +58,30 @@ export function makeKernel({ Du, Dv, f, k, dt }: Settings) {
   };
 }
 
+const anoise: Gaussian2D = {
+  center: { x: 0, y: 0 },
+  radius: 0.25,
+  scale: 1,
+};
+
+const bnoise: Gaussian2D = {
+  center: { x: 0.3, y: 0.3 },
+  radius: 0.5,
+  scale: 1,
+};
+
+function rand(from: number, to: number) {
+  return from + (to - from) * Math.random();
+}
+
+function randomGauss(scale = 1.0): Gaussian2D {
+  return {
+    center: { x: rand(-1, 1), y: rand(-1, 1) },
+    radius: rand(0.1, 1),
+    scale: rand(0.1, 2),
+  };
+}
+
 export function randomBelousov(
   n: number,
   m: number,
@@ -66,6 +95,7 @@ export function randomBelousov(
       m,
       wrap: true,
     },
-    makeKernel(settings)
+    makeKernel(settings),
+    addGaussianNoise({ p, n, m }, [randomGauss(), randomGauss()])
   );
 }

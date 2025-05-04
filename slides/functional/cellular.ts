@@ -213,3 +213,57 @@ function scale(arr: Float32Array, range: number[]) {
     arr[i] = ra2 + ra4 * arr[i];
   }
 }
+
+export type Gaussian2D = {
+  // 0,0 = center of row / col, 1/-1 = side
+  center: { x: number; y: number };
+  radius: number; // standard deviation
+  scale: number; // multiplier (max value)
+};
+
+export function addGaussianNoise(
+  g: { n: number; m: number; p: number },
+  variables: Gaussian2D[],
+  arr: Float32Array = new Float32Array(g.n * g.m * g.p)
+): Float32Array {
+  for (let i = 0; i < g.p; ++i) {
+    fillGaussianArray(arr, g, i, variables[i]);
+    fillNoiseArray(arr, g, i);
+  }
+  return arr;
+}
+
+function fillGaussianArray(
+  arr: Float32Array,
+  {
+    n,
+    m,
+    p,
+  }: {
+    n: number;
+    m: number;
+    p: number;
+  },
+  pidx: number,
+  gauss: Gaussian2D
+): void {
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      // Map i, j to [-1, 1] range
+      const x = (j / (m - 1)) * 2 - 1;
+      const y = (i / (n - 1)) * 2 - 1;
+
+      // Distance to Gaussian center
+      const dx = x - gauss.center.x;
+      const dy = y - gauss.center.y;
+      const dist2 = dx * dx + dy * dy;
+
+      // 2D Gaussian formula
+      const value =
+        gauss.scale * Math.exp((-0.5 * dist2) / (gauss.radius * gauss.radius));
+
+      const idx = (i * m + j) * p + pidx;
+      arr[idx] = value;
+    }
+  }
+}
