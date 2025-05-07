@@ -3,3 +3,33 @@ import { Bifurcation } from "./components/Bifurcation2";
 ## Diagramme : Bifurcation 
 
 <Bifurcation />
+
+# Étude de la dynamique en fonction de $a_{32}$
+
+Nous cherchons à observer comment le comportement du système change selon la valeur du paramètre $a_{32}$, qui représente l’intensité de la prédation de l’herbivore par l’omnivore.
+
+## Hypothèse
+
+Pour certaines valeurs de $a_{32}$, le système devient chaotique ou instable.
+
+## Méthode
+
+L’outil utilisé est un **diagramme de bifurcation** :
+
+- On fait varier $a_{32}$ progressivement.
+- Pour chaque valeur, on résout numériquement le système d’équations différentielles sur un temps long.
+- On observe la **valeur moyenne des populations** (proie $N_1$, herbivore $N_2$, omnivore $N_3$) sur les derniers instants du temps.
+
+## Comportements observés
+
+### Pour $a_{32}$ faible (ex : 0.1)
+- Système **stable**, convergence vers un point d’équilibre.
+- $N_1$, $N_2$, $N_3$ tendent vers des valeurs constantes.
+
+### Pour $a_{32}$ intermédiaire
+- Présence d’**oscillations** ou de **cycle limite** (comportement périodique).
+- Les espèces coexistent avec des fluctuations régulières.
+
+### Pour $a_{32}$ élevé (ex : $a_{32} > 1.2$)
+- Comportement **complexe**, potentiellement **chaotique**.
+- De petites variations des conditions initiales entraînent des trajectoires très différentes.
