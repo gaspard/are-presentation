@@ -1,7 +1,25 @@
 import { Belousov } from "./components/Belousov";
 
-# Belousov–Zhabotinsky
+# Conditions initiales et stabilité
 
-### diffusion - reaction
+Implémentation d'une simulation de la réaction Belousov-Zhabotinsky en vue d'explorer des notions de territoire (que nous verrons plus en détail plus tard).
+
+## Modèle réaction-diffusion Gray-Scott
 
 <Belousov />
+
+On simule deux espèces chimiques $u$ et $v$ selon les équations suivantes :
+
+$$
+\begin{aligned}
+\frac{\partial u}{\partial t} &= D_u \nabla^2 u - u v^2 + f (1 - u) \\
+\frac{\partial v}{\partial t} &= D_v \nabla^2 v + u v^2 - (f + k) v
+\end{aligned}
+$$
+
+Où :
+
+- $ D_u, D_v $ : coefficients de diffusion pour $ u $ et $ v $
+- $ f $ : taux d’alimentation ("feed rate")
+- $ k $ : taux de retrait ("kill rate")
+- $ \nabla^2 $ : opérateur Laplacien (diffusion spatiale)
