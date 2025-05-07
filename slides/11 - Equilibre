@@ -1,0 +1,30 @@
+## Points d'équilibre
+
+Les points d'équilibre sont obtenus en annulant les dérivées :
+
+- $x^* = 0, y^* = 0$ : extinction totale.
+- $x^* = \frac{\gamma}{\delta}, y^* = \frac{\alpha}{\beta}$ : coexistence stable.
+
+## Matrice Jacobienne
+
+La matrice Jacobienne est construite à partir des dérivées partielles des équations par rapport à $x$ et $y$. Elle représente les interactions locales entre les populations autour d'un point donné.
+
+Pour le système Lotka-Volterra, elle s'écrit :
+
+$$
+J(x, y) =
+\begin{pmatrix}
+\frac{\partial}{\partial x} (\alpha x - \beta xy) & \frac{\partial}{\partial y} (\alpha x - \beta xy) \\
+\frac{\partial}{\partial x} (\delta xy - \gamma y) & \frac{\partial}{\partial y} (\delta xy - \gamma y)
+\end{pmatrix}
+$$
+
+En calculant les dérivées partielles :
+
+$$
+J(x, y) =
+\begin{pmatrix}
+\alpha - \beta y & -\beta x \\
+\delta y & \delta x - \gamma
+\end{pmatrix}
+$$
